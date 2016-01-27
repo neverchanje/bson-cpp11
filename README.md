@@ -1,7 +1,7 @@
 
 # bson-cpp11
 
-An C++11 implementation of BSON.
+A C++11 implementation of BSON.
 
 ### About BSON
 

@@ -24,6 +24,9 @@ class BSONObj {
 
   void Dump() const;
 
+  // empty object
+  inline BSONObj();
+
  private:
   const char *code_;
 };

@@ -26,11 +26,18 @@ class Slice {
       Slice(s, strlen(s)) {
   }
 
+  constexpr Slice(std::nullptr_t p) :
+      str_(nullptr),
+      len_(0) {
+  }
+
   char operator[](size_t n) const { return str_[n]; }
 
   size_t Len() const { return len_; }
 
   const char *RawData() const { return str_; }
+
+  bool Empty() const { return len_ == 0; }
 
   int Compare(const Slice &rhs) const {
     return memcmp(str_, rhs.RawData(), len_);

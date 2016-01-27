@@ -16,18 +16,20 @@ class Status {
  public:
 
   // Return an success state.
+  //
   // The cost of creating an success state is much cheaper than an error state.
-  // The internal error infomation is generated only when the Status object is
-  // not an OK object.
+  // The error information is generated only when the Status object is not an
+  // OK object, which contains merely a pointer.
+  //
   static Status OK() { return Status(); }
-  bool IsOK() const { return Code() == ErrorCodes::OK; }
+  bool IsOK() const { return Code() == ErrorCodes::kOK; }
 
-  static Status FailedToParse(const Slice &msg) { return Status(ErrorCodes::FailedToParse, msg); }
-  bool IsFailedToParse() const { return Code() == ErrorCodes::FailedToParse; }
+  static Status FailedToParse(const Slice &msg) { return Status(ErrorCodes::kFailedToParse, msg); }
+  bool IsFailedToParse() const { return Code() == ErrorCodes::kFailedToParse; }
 
   ErrorCodes Code() const {
     if (!info_)
-      return ErrorCodes::OK;
+      return ErrorCodes::kOK;
     return static_cast<ErrorCodes>(info_->code);
   }
 
@@ -42,8 +44,8 @@ class Status {
   }
 
   enum ErrorCodes {
-    OK = 0,
-    FailedToParse = 1
+    kOK = 0,
+    kFailedToParse = 1
   };
 
   struct ErrorInfo {

@@ -10,18 +10,18 @@ std::string Status::ToString() const {
   std::string ret;
 
   switch (Code()) {
-    case Status::ErrorCodes::OK:
-      ret += "OK";
+    case ErrorCodes::kOK:
+      ret = "OK";
       break;
-    case Status::ErrorCodes::FailedToParse:
-      ret += "FailedToParse";
+    case ErrorCodes::kFailedToParse:
+      ret = "FailedToParse";
       break;
     default:
-      ret += "Unknown Code";
+      ret = "Unknown ErrorCode";
       break;
   }
 
-  return ret + info_.msg;
+  return ret + info_->msg;
 }
 
 } // namespace bson

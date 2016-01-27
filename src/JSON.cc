@@ -2,6 +2,8 @@
 // Created by neverchanje on 1/22/16.
 //
 
+#include <cassert>
+
 #include "JSON.h"
 #include "DisallowCopying.h"
 #include "BSONObjBuilder.h"
@@ -21,13 +23,9 @@ class JSONParser {
 
  public:
 
-  explicit JSONParser(const std::string &json);
+  explicit JSONParser(const Slice &json);
 
-  void Parse(BSONObjBuilder &builder);
-
-  inline Status ParseError(const Slice &msg) {
-    return Status::FailedToParse(msg);
-  }
+  Status Parse(BSONObjBuilder &builder);
 
  private:
 
@@ -40,33 +38,97 @@ class JSONParser {
    */
   bool advance(const char *token);
 
+  /*
+   * OBJECT :
+   *     {}
+   *   | { MEMBERS }
+   *
+   * MEMBERS :
+   *     PAIR
+   *   | PAIR , MEMBERS
+   *
+   * PAIR :
+   *     FIELD : VALUE
+   *
+   * FIELD:
+   *     DOUBLEQUOTE CHARS DOUBLEQUOTE
+   *   | SINGLEQUOTE CHARS SINGLEQUOTE
+   */
+  Status parseObject(const Slice &fieldName, BSONObjBuilder &builder);
+  Status parseField(std::string &field);
+  Status parseChars(std::string &result, const char *terminalSet);
+
+  Status parseError(const Slice &msg) { return Status::FailedToParse(msg); }
+
  private:
   const char *buf_ const; // the input buffer
   const char *pos_; // current position of the buffer
+  const char *buf_end_ const; // the end of the input buffer
 };
 
-void JSONParser::Parse(BSONObjBuilder &builder) {
+Status JSONParser::Parse(BSONObjBuilder &builder) {
   if (advance(LBRACE)) {
-
+    // A bson object begins with a left brace but without a specific field name.
+    return parseObject(nullptr, builder);
   }
+  return parseError("Expecting {");
 }
 
-JSONParser::JSONParser(const std::string &json) :
-    buf_(json.c_str()),
-    pos_(&buf_[0]) {
+JSONParser::JSONParser(const Slice &json) :
+    buf_(json.RawData()),
+    pos_(buf_),
+    buf_end_(json.RawData() + json.Len()) {
 }
 
-BSONObj FromJSON(const std::string &json) {
+BSONObj FromJSON(const Slice &json) {
   JSONParser parser(json);
   BSONObjBuilder builder;
 
-  parser.Parse(builder);
+  Status ret = parser.Parse(builder);
 
   return builder.Obj();
 }
 
 bool JSONParser::advance(const char *token) {
+  assert(token != nullptr);
 
+  // ignore whitespaces
+  while (pos_ != buf_end_ && isspace(*pos_)) pos_++;
+
+  while (pos_ != buf_end_ && (*token) != '\0' && (*pos_) == (*token)) {
+    pos_++;
+    token++;
+  }
+
+  return (*token) == '\0';
+}
+
+Status JSONParser::parseObject(const Slice &fieldName, BSONObjBuilder &builder) {
+  if (pos_ == buf_end_)
+    return Status::FailedToParse("Expecting an }");
+
+  std::string firstField;
+  if (parseField(firstField).IsOK()) {
+
+  }
+
+
+  return Status::OK();
+}
+
+Status JSONParser::parseField(std::string &field) {
+  if (advance(DOUBLEQUOTE)) {
+    parseChars(field, "\"");
+  } else if (advance(SINGLEQUOTE)) {
+    parseChars(field, "'");
+  }
+  return Status::FailedToParse("Expecting quoted string");
+}
+
+Status JSONParser::parseChars(std::string &result, const char *terminalSet) {
+  for (; pos_ != buf_end_; pos_++) {
+    strchr(terminalSet, (*pos_));
+  }
 }
 
 } // namespace bson
