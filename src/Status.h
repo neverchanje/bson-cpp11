@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Slice.h"
+#include "DisallowCopying.h"
 
 namespace bson {
 
@@ -13,7 +14,20 @@ namespace bson {
 //
 class Status {
 
+ private:
+
+  enum ErrorCodes {
+    kOK = 0,
+    kFailedToParse = 1
+  };
+
  public:
+
+  Status() = default;
+
+  // copyable
+  Status(const Status &rhs);
+  Status &operator=(const Status &rhs);
 
   // Return an success state.
   //
@@ -22,31 +36,18 @@ class Status {
   // OK object, which contains merely a pointer.
   //
   static Status OK() { return Status(); }
-  bool IsOK() const { return Code() == ErrorCodes::kOK; }
+  bool IsOK() const { return code() == ErrorCodes::kOK; }
 
   static Status FailedToParse(const Slice &msg) { return Status(ErrorCodes::kFailedToParse, msg); }
-  bool IsFailedToParse() const { return Code() == ErrorCodes::kFailedToParse; }
-
-  ErrorCodes Code() const {
-    if (!info_)
-      return ErrorCodes::kOK;
-    return static_cast<ErrorCodes>(info_->code);
-  }
+  bool IsFailedToParse() const { return code() == ErrorCodes::kFailedToParse; }
 
   std::string ToString() const;
 
  private:
 
-  Status() = default;
-
   Status(ErrorCodes errorCode, const Slice &msg) :
       info_(new ErrorInfo(errorCode, msg)) {
   }
-
-  enum ErrorCodes {
-    kOK = 0,
-    kFailedToParse = 1
-  };
 
   struct ErrorInfo {
     unsigned char code;
@@ -58,7 +59,25 @@ class Status {
     }
   };
 
-  const std::unique_ptr<ErrorInfo> info_;
+  ErrorCodes code() const {
+    if (!info_)
+      return ErrorCodes::kOK;
+    return static_cast<ErrorCodes>(info_->code);
+  }
+
+  void copy(const Status &);
+
+ private:
+  std::unique_ptr<ErrorInfo> info_;
 };
+
+inline Status &Status::operator=(const Status &status) {
+  copy(status);
+  return (*this);
+}
+
+inline Status::Status(const Status &status) {
+  copy(status);
+}
 
 } // namespace bson

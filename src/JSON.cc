@@ -18,6 +18,10 @@ static const char
     *COLON = ":", *COMMA = ",", *FORWARDSLASH = "/",
     *SINGLEQUOTE = "'", *DOUBLEQUOTE = "\"";
 
+enum {
+  FIELD_RESERVE_SIZE = 4096
+};
+
 class JSONParser {
   __DISALLOW_COPYING__(JSONParser);
 
@@ -57,6 +61,11 @@ class JSONParser {
   Status parseObject(const Slice &fieldName, BSONObjBuilder &builder);
   Status parseField(std::string &field);
   Status parseChars(std::string &result, const char *terminalSet);
+  Status parseValue(const std::string &field, BSONObjBuilder &builder);
+
+  // @param field must be reserved FIELD_RESERVE_SIZE bytes before this method
+  // is called.
+  Status parsePair(std::string &field, BSONObjBuilder &builder);
 
   Status parseError(const Slice &msg) { return Status::FailedToParse(msg); }
 
@@ -84,7 +93,9 @@ BSONObj FromJSON(const Slice &json) {
   JSONParser parser(json);
   BSONObjBuilder builder;
 
-  Status ret = parser.Parse(builder);
+  if (!parser.Parse(builder).IsOK()) {
+    // error handling
+  }
 
   return builder.Obj();
 }
@@ -107,9 +118,22 @@ Status JSONParser::parseObject(const Slice &fieldName, BSONObjBuilder &builder) 
   if (pos_ == buf_end_)
     return Status::FailedToParse("Expecting an }");
 
-  std::string firstField;
-  if (parseField(firstField).IsOK()) {
+  std::string field;
+  field.reserve(FIELD_RESERVE_SIZE);
 
+  // parse the first pair
+  Status firstRet = parseField(field);
+  if (!firstRet.IsOK()) return firstRet;
+
+  while (advance(COMMA)) {
+    field.clear();
+    Status ret = parseField(field);
+    if (!ret.IsOK())
+      return ret;
+  }
+
+  if (advance(RBRACE)) {
+    return parseError("Expecting } or ,");
   }
 
 
@@ -129,6 +153,41 @@ Status JSONParser::parseChars(std::string &result, const char *terminalSet) {
   for (; pos_ != buf_end_; pos_++) {
     strchr(terminalSet, (*pos_));
   }
+}
+
+Status JSONParser::parseValue(const std::string &field,
+                              BSONObjBuilder &builder) {
+  if (advance(LBRACE)) {
+    // subobject
+    Status ret = parseObject(field, builder);
+  } else if (advance(LBRACKET)) {
+    // array
+  } else if (advance(DOUBLEQUOTE)) {
+    // double-quoted string
+  } else if (advance(SINGLEQUOTE)) {
+    // single-quoted string
+  } else if (advance("true")) {
+
+  } else if (advance("false")) {
+
+  } else if (advance("null")) {
+
+  } else {
+    // number
+  }
+}
+
+Status JSONParser::parsePair(std::string &field, BSONObjBuilder &builder) {
+  Status ret = parseField(field);
+  if (!ret.IsOK()) return ret;
+
+  if (advance(COLON))
+    return parseError("Expecting :");
+
+  Status valRet = parseValue(field, builder);
+  if (!valRet.IsOK()) return valRet;
+
+  return Status::OK();
 }
 
 } // namespace bson

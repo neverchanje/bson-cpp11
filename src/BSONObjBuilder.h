@@ -20,14 +20,11 @@ class BSONObjBuilder {
 
   BSONObjBuilder() = default;
 
-  void BuildObject();
-
-  void BuildValue();
-
-  void BuildField();
+  BSONObjBuilder &AppendNull();
 
  private:
   BSONObj obj_;
+
 };
 
 } // namespace bson

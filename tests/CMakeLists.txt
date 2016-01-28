@@ -1,6 +1,6 @@
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
-add_subdirectory(lib/gtest-1.7.0)
+add_subdirectory(lib/googletest/googletest)
 
 add_executable(Slice_unittest
         Slice_unittest.cc
