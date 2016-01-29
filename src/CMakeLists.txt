@@ -6,4 +6,6 @@ add_executable(BSON
         BSONObjBuilder.cc
         JSON.cc
         Status.cc
-        Slice.cc)
+        Slice.cc
+        DataOutput.cc
+        BufBuilder.cc)

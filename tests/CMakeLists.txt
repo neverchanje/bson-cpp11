@@ -12,3 +12,11 @@ add_executable(Status_unittest
         ../src/Status.cc
         ../src/Slice.cc)
 target_link_libraries(Status_unittest gtest gtest_main)
+
+add_executable(DataOutput_unittest
+        DataOutput_unittest.cc
+        ../src/DataOutput.cc
+        ../src/Fmt.h
+        ../src/FixedBuffer.h
+        )
+target_link_libraries(DataOutput_unittest gtest gtest_main)
