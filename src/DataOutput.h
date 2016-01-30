@@ -81,10 +81,10 @@ class DataOutput {
   /**
    * DataOutput reserve the implementation of how you append
    * string to the buffer.
-   * `appendBuffer` is used and only used in operator<<.
+   *
+   * Note: Slice passed to appendBuffer must have been appended null character
+   * at the end.
    */
-  virtual void appendBuffer(const char *s, size_t len) = 0;
-
   virtual void appendBuffer(const Slice &s) = 0;
 };
 

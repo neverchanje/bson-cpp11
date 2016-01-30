@@ -8,4 +8,5 @@ add_executable(BSON
         Status.cc
         Slice.cc
         DataOutput.cc
-        BufBuilder.cc)
+        BufBuilder.cc
+        Slice-inl.h)

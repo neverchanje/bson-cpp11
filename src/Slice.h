@@ -26,6 +26,11 @@ class Slice {
       Slice(s, strlen(s)) {
   }
 
+  Slice(const char *s, size_t n) :
+      str_(s),
+      len_(n) {
+  }
+
   constexpr Slice(std::nullptr_t p) :
       str_(nullptr),
       len_(0) {
@@ -44,21 +49,10 @@ class Slice {
   }
 
  private:
-
-  Slice(const char *s, size_t n) :
-      str_(s),
-      len_(n) {
-  }
-
- private:
   const char *str_;
   const size_t len_;
 };
 
-inline bool operator==(const Slice &lhs, const Slice &rhs) {
-  return lhs.Compare(rhs) == 0;
-}
-
-inline std::ostream &operator<<(std::ostream &stream, const Slice &s);
-
 } // namespace bson
+
+#include "Slice-inl.h"

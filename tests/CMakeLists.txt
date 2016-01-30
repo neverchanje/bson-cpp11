@@ -17,6 +17,12 @@ add_executable(DataOutput_unittest
         DataOutput_unittest.cc
         ../src/DataOutput.cc
         ../src/Fmt.h
-        ../src/FixedBuffer.h
-        )
+        ../src/Slice.cc)
 target_link_libraries(DataOutput_unittest gtest gtest_main)
+
+add_executable(BufBuilder_unittest
+        BufBuilder_unittest.cc
+        ../src/DataOutput.cc
+        ../src/Slice.cc
+        ../src/BufBuilder.cc)
+target_link_libraries(BufBuilder_unittest gtest gtest_main)

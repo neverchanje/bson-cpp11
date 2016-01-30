@@ -17,17 +17,14 @@ class BufBuilder: public DataOutput {
 
  public:
 
-  BufBuilder() :
-      buf_(nullptr),
-      cap_(0),
-      len_(0) {
-  }
+  BufBuilder(size_t initsize = 512) :
+      cap_(initsize),
+      len_(0),
+      buf_(nullptr) {
 
-  BufBuilder(size_t initsize = 512) {
     if (initsize) {
       buf_ = (char *) std::malloc(initsize);
-      // out of memory exception handling
-      cap_ = initsize;
+      //TODO: out of memory exception handling
     }
   }
 
@@ -45,11 +42,9 @@ class BufBuilder: public DataOutput {
   size_t Avail() const { return cap_ - len_; }
 
   void Append(const char *s, size_t len) {
-    if (len_) {
-
-    }
+    char *dest = ensureCapacity(len);
+    memcpy(dest, s, len);
   }
-
 
  private:
 
@@ -62,9 +57,20 @@ class BufBuilder: public DataOutput {
     len_ = 0;
   }
 
-  //
-  char *grow(size_t size) {
+  //@param size is the number of bytes needed.
+  char *ensureCapacity(size_t size) {
+    size_t oldcap = cap_;
+    size_t minsize = len_ + size;
 
+    if (minsize > oldcap) {
+      // grow capacity
+      size_t newcap = (oldcap * 3) / 2 + 1;
+      if (newcap < minsize)
+        newcap = minsize;
+      buf_ = (char *) std::realloc(buf_, newcap);
+      //TODO: out of memory exception handling
+    }
+    return buf_;
   }
 
  private:

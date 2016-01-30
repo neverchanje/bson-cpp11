@@ -4,12 +4,8 @@
 
 #include "Slice.h"
 
-#include <ostream>
-
 namespace bson {
 
-inline std::ostream &operator<<(std::ostream &stream, const Slice &s) {
-  return stream << s.RawData();
-}
+
 
 } // namespace bson
