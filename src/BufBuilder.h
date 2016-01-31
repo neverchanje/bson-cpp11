@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "DisallowCopying.h"
 #include "DataOutput.h"
 
 namespace bson {
