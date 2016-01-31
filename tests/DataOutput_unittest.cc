@@ -3,6 +3,7 @@
 //
 
 #include <gtest/gtest.h>
+#include <iostream>
 
 #include "DataOutput.h"
 
@@ -12,10 +13,13 @@ class TestStream: public DataOutput {
 
  public:
 
-  TestStream() = default;
+  TestStream() :
+      cur_(buf_) {
+  }
 
   void Reset() {
-    buf_[0] = '\0';
+    (*buf_) = '\0';
+    cur_ = buf_;
   }
 
   Slice Data() const { return buf_; }
@@ -23,14 +27,15 @@ class TestStream: public DataOutput {
  private:
 
   void appendBuffer(const Slice &s) override {
-    // null character has been appended to the end of s.
-    memcpy(buf_, s.RawData(), s.Len());
+    memcpy(cur_, s.RawData(), s.Len());
+    cur_ += s.Len();
+    *cur_ = '\0';
   }
 
  private:
+  char *cur_;
   char buf_[4096];
 };
-
 
 TEST(Basic, Integers) {
 
@@ -38,14 +43,23 @@ TEST(Basic, Integers) {
 
   ts.WriteInt(255);
   ASSERT_EQ(ts.Data(), "255");
+
   ts.WriteInt(-1);
   ASSERT_EQ(ts.Data(), "255-1");
+
   ts.WriteInt(0);
   ASSERT_EQ(ts.Data(), "255-10");
+}
 
-  ts.Reset();
-  ts.WriteInt(255).WriteChars("*").WriteInt(-1);
-  ASSERT_EQ(ts.Data(), "255*-1"); //possible wrong case: 255*-1t
+TEST(Basic, Chars) {
+
+  TestStream ts;
+
+  ts.WriteChars("abc");
+  ASSERT_EQ("abc", ts.Data());
+
+  ts.WriteInt(-1).WriteChars("*");
+  ASSERT_EQ("abc-1*", ts.Data());
 }
 
 #include <limits.h>

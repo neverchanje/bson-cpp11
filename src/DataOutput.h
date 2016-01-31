@@ -30,7 +30,8 @@ class DataOutput {
    * Raw string will be implicitly promoted to boolean rather than
    * std::string, if we don't override operator<< with 'const char *'.
    */
-  DataOutput &WriteChars(const Slice s) {
+  DataOutput &WriteChars(const Slice &s) {
+    appendBuffer(s);
     return *this;
   }
 
