@@ -12,6 +12,14 @@ namespace bson {
 
 class Slice;
 
+struct LittleEndian {
+  static const bool value = true;
+};
+
+struct BigEndian {
+  static const bool value = false;
+};
+
 /**
  * The DataView view provides a low-level interface for reading and
  * writing multiple number types in an buffer irrespective of the
@@ -26,8 +34,16 @@ class DataView {
   // existing buffer.
   // Note: the size of the buffer must be ensured available before
   // the read/write operation.
-  DataView(char *buf) :
-      buf_(buf) {
+  //
+  // A DataView constructor must be specified with an endian type,
+  // which is a boolean value, true is for little endian, and false
+  // for big endian. We construct it like this:
+  //
+  // DataView(buf, LittleEndian::value)
+  //
+  DataView(char *buf, bool endianType) :
+      buf_(buf),
+      is_le_(endianType) {
   }
 
   // DataView writes numbers in little endian / network byte order.
@@ -69,6 +85,7 @@ class DataView {
 
  private:
   char *buf_;
+  bool is_le_;
 };
 
 // type specialization

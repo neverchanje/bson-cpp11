@@ -11,11 +11,17 @@ using namespace boost::endian;
 namespace bson {
 
 // Use boost::endian library to converse the endian of integral numbers.
-// (boost::endian doesn't provide endian conversion for float point numbers.)
+// (boost::endian doesn't provide endian conversion for float point numbers,
+// but we can easily implement it.)
 
 #define WRITE_NUM_IMPL(data_type) \
-  little_##data_type##_buf_t t(static_cast<data_type##_t>(val)); \
-  writeBuffer(t.data(), sizeof(data_type##_t), offset); \
+  if(is_le_) { \
+    little_##data_type##_buf_t t(static_cast<data_type##_t>(val)); \
+    writeBuffer(t.data(), sizeof(data_type##_t), offset); \
+  } else { \
+    big_##data_type##_buf_t t(static_cast<data_type##_t>(val)); \
+    writeBuffer(t.data(), sizeof(data_type##_t), offset); \
+  } \
   return (*this)
 
 
