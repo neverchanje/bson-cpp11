@@ -3,7 +3,6 @@
 //
 
 #include <gtest/gtest.h>
-#include <iostream>
 
 #include "DataOutput.h"
 
@@ -26,9 +25,9 @@ class TestStream: public DataOutput {
 
  private:
 
-  void appendBuffer(const Slice &s) override {
-    memcpy(cur_, s.RawData(), s.Len());
-    cur_ += s.Len();
+  void appendBuffer(const char *s, size_t len) override {
+    memcpy(cur_, s, len);
+    cur_ += len;
     *cur_ = '\0';
   }
 

@@ -3,6 +3,7 @@
 //
 
 #include <cstdlib>
+#include <cstring> // memcpy
 
 #include "BufBuilder.h"
 
@@ -28,7 +29,7 @@ void BufBuilder::kill() {
   len_ = 0;
 }
 
-char *BufBuilder::ensureCapacity(size_t size) {
+void BufBuilder::ensureCapacity(size_t size) {
   size_t oldcap = cap_;
   size_t minsize = len_ + size;
 
@@ -42,7 +43,10 @@ char *BufBuilder::ensureCapacity(size_t size) {
 
     cap_ = newcap;
   }
-  return buf_ + len_;
+}
+
+void BufBuilder::AppendStr(const Slice &s) {
+
 }
 
 } // namespace bson

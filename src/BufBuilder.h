@@ -5,11 +5,20 @@
 
 #pragma once
 
-#include "DataOutput.h"
+#include <type_traits>
+
+#include "DisallowCopying.h"
+#include "DataView.h"
 
 namespace bson {
 
-class BufBuilder: public DataOutput {
+class Slice;
+
+// std::enable_if_t is not available in C++11
+template<bool B, class T = void>
+using enable_if_t = typename std::enable_if<B, T>::type;
+
+class BufBuilder {
   __DISALLOW_COPYING__(BufBuilder);
 
  public:
@@ -18,18 +27,12 @@ class BufBuilder: public DataOutput {
 
   ~BufBuilder() { kill(); }
 
-  size_t Len() const { return len_; }
-
-  size_t Capacity() const { return cap_; }
-
-  const char *Data() const { return buf_; }
-  char *Data() { return buf_; }
-
-  size_t Avail() const { return cap_ - len_; }
-
-  void Append(const char *s, size_t len) {
-    memcpy(ensureCapacity(len), s, len);
+  template<class T, typename = enable_if_t<std::is_integral<T>::value>>
+  void AppendIntegral(T v) {
+    DataView(buf_ + len_).WriteNum(v);
   }
+
+  void AppendStr(const Slice &s);
 
  private:
 
@@ -38,7 +41,7 @@ class BufBuilder: public DataOutput {
   // Ensure the capacity of buffer is large enough for the needed
   // size of memory.
   // @param size is the number of bytes needed.
-  char *ensureCapacity(size_t size);
+  void ensureCapacity(size_t size);
 
  private:
   char *buf_;

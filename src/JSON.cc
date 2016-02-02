@@ -72,7 +72,7 @@ class JSONParser {
  private:
   const char *buf_; // the input buffer
   const char *pos_; // current position of the buffer
-  const char *buf_end_ const; // the end of the input buffer
+  const char *buf_end_; // the end of the input buffer
 };
 
 Status JSONParser::Parse(BSONObjBuilder &builder) {

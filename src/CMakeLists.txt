@@ -1,5 +1,4 @@
 
-
 add_executable(BSON
         BSONObj.cc
         BSONElement.cc
@@ -9,4 +8,4 @@ add_executable(BSON
         Slice.cc
         DataOutput.cc
         BufBuilder.cc
-        Slice-inl.h)
+        DataView.cc)

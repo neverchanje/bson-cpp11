@@ -22,7 +22,12 @@ target_link_libraries(DataOutput_unittest gtest gtest_main)
 
 add_executable(BufBuilder_unittest
         BufBuilder_unittest.cc
-        ../src/DataOutput.cc
+        ../src/DataView.cc
         ../src/Slice.cc
         ../src/BufBuilder.cc)
 target_link_libraries(BufBuilder_unittest gtest gtest_main)
+
+add_executable(DataView_unittest
+        DataView_unittest.cc
+        ../src/DataView.cc)
+target_link_libraries(DataView_unittest gtest gtest_main)

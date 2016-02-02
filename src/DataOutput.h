@@ -31,12 +31,15 @@ class DataOutput {
    * std::string, if we don't override operator<< with 'const char *'.
    */
   DataOutput &WriteChars(const Slice &s) {
-    appendBuffer(s);
+    appendBuffer(s.RawData(), s.Len());
     return *this;
   }
 
   DataOutput &WriteChar(char v) {
-    return WriteInt(static_cast<int>(v));
+    char s[2];
+    s[0] = v;
+    s[1] = '\0';
+    return WriteChars(s);
   }
 
   DataOutput &WriteUShort(unsigned short v) {
@@ -86,7 +89,7 @@ class DataOutput {
    * Note: Slice passed to appendBuffer must have been appended null character
    * at the end.
    */
-  virtual void appendBuffer(const Slice &s) = 0;
+  virtual void appendBuffer(const char *s, size_t len) = 0;
 };
 
 } //namespace bson

@@ -62,5 +62,3 @@ inline std::ostream &operator<<(std::ostream &stream, const Slice &s) {
 }
 
 } // namespace bson
-
-#include "Slice-inl.h"

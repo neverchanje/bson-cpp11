@@ -27,14 +27,14 @@ void DataOutput::formatPtrToString(const void *p) {
   *cur = '\0';
   len = cur - buf;
   std::reverse(buf + 2, buf + len);
-  appendBuffer(Slice(buf, len));
+  appendBuffer(buf, len);
 }
 
 template<typename T>
 void DataOutput::formatIntToString(T v) {
   static_assert(std::is_integral<T>::value, "v is not a integral value.");
   fmt::FormatInt f(v);
-  appendBuffer(Slice(f.c_str(), f.size()));
+  appendBuffer(f.c_str(), f.size());
 }
 
 //TODO: replace it with google/Double-Conversion
@@ -44,7 +44,7 @@ void DataOutput::formatFloatToString(T v) {
   char buf[32];
 
   int len = snprintf(buf, sizeof(buf), "%lf", v);
-  appendBuffer(Slice(buf, static_cast<size_t>(len)));
+  appendBuffer(buf, static_cast<size_t>(len));
 }
 
 
