@@ -27,9 +27,11 @@ class BufBuilder {
 
   ~BufBuilder() { kill(); }
 
-  template<class T, typename = enable_if_t<std::is_integral<T>::value>>
-  void AppendIntegral(T v) {
-    DataView(buf_ + len_).WriteNum(v);
+  template<class T, typename = enable_if_t<
+      std::is_integral<T>::value
+          || std::is_floating_point<T>::value> >
+  void AppendNum(T v) {
+    DataView(buf_ + len_, LittleEndian::value).WriteNum(v);
   }
 
   void AppendStr(const Slice &s);

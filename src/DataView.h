@@ -48,19 +48,16 @@ class DataView {
 
   // DataView writes numbers in little endian / network byte order.
 
-  DataView &WriteUChar(unsigned char val, size_t offset = 0);
-  DataView &WriteChar(char val, size_t offset = 0);
-  DataView &WriteUShort(unsigned short val, size_t offset = 0);
-  DataView &WriteShort(short val, size_t offset = 0);
-  DataView &WriteUInt(unsigned val, size_t offset = 0);
-  DataView &WriteInt(int val, size_t offset = 0);
-  DataView &WriteULLong(unsigned long long val, size_t offset = 0);
-  DataView &WriteLLong(long long val, size_t offset = 0);
-  DataView &WriteFloat(float val, size_t offset = 0);
-  DataView &WriteDouble(double val, size_t offset = 0);
-
-  template<typename T>
-  DataView &WriteNum(T val, size_t offset = 0);
+  DataView &WriteNum(unsigned char val, size_t offset = 0);
+  DataView &WriteNum(char val, size_t offset = 0);
+  DataView &WriteNum(unsigned short val, size_t offset = 0);
+  DataView &WriteNum(short val, size_t offset = 0);
+  DataView &WriteNum(unsigned val, size_t offset = 0);
+  DataView &WriteNum(int val, size_t offset = 0);
+  DataView &WriteNum(unsigned long long val, size_t offset = 0);
+  DataView &WriteNum(long long val, size_t offset = 0);
+  DataView &WriteNum(float val, size_t offset = 0);
+  DataView &WriteNum(double val, size_t offset = 0);
 
   // T is only available for POD types.
   template<typename T>
@@ -88,45 +85,5 @@ class DataView {
   bool is_le_;
 };
 
-// type specialization
-template<>
-DataView &DataView::WriteNum(unsigned char val, size_t offset) {
-  return WriteUChar(val, offset);
-}
-
-template<>
-DataView &DataView::WriteNum(char val, size_t offset) {
-  return WriteChar(val, offset);
-}
-
-template<>
-DataView &DataView::WriteNum(unsigned short val, size_t offset) {
-  return WriteUShort(val, offset);
-}
-
-template<>
-DataView &DataView::WriteNum(short val, size_t offset) {
-  return WriteShort(val, offset);
-}
-
-template<>
-DataView &DataView::WriteNum(unsigned val, size_t offset) {
-  return WriteUInt(val, offset);
-}
-
-template<>
-DataView &DataView::WriteNum(int val, size_t offset) {
-  return WriteInt(val, offset);
-}
-
-template<>
-DataView &DataView::WriteNum(unsigned long long val, size_t offset) {
-  return WriteULLong(val, offset);
-}
-
-template<>
-DataView &DataView::WriteNum(long long val, size_t offset) {
-  return WriteLLong(val, offset);
-}
 
 } // namespace bson
