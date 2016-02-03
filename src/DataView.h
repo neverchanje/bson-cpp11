@@ -12,18 +12,31 @@ namespace bson {
 
 class Slice;
 
+enum EndianType {
+  kNativeEndian = 0,
+  kLittleEndian = 1,
+  kBigEndian = 2
+};
+
+struct NativeEndian {
+  static const EndianType value = EndianType::kNativeEndian;
+};
+
 struct LittleEndian {
-  static const bool value = true;
+  static const EndianType value = EndianType::kLittleEndian;
 };
 
 struct BigEndian {
-  static const bool value = false;
+  static const EndianType value = EndianType::kBigEndian;
 };
 
 /**
  * The DataView view provides a low-level interface for reading and
  * writing multiple number types in an buffer irrespective of the
  * platform's endianness.
+ *
+ * Endianess independence is useful for portable binary files and
+ * network I/O formats.
  */
 class DataView {
   __DISALLOW_COPYING__(DataView);
@@ -32,7 +45,7 @@ class DataView {
 
   // A DataView object offers reading and writing operations on an
   // existing buffer.
-  // Note: the size of the buffer must be ensured available before
+  // Note: the size of the buffer must be ensured enough before
   // the read/write operation.
   //
   // A DataView constructor must be specified with an endian type,
@@ -41,12 +54,10 @@ class DataView {
   //
   // DataView(buf, LittleEndian::value)
   //
-  DataView(char *buf, bool endianType) :
+  DataView(char *buf, EndianType endianType) :
       buf_(buf),
-      is_le_(endianType) {
+      endian_(endianType) {
   }
-
-  // DataView writes numbers in little endian / network byte order.
 
   DataView &WriteNum(unsigned char val, size_t offset = 0);
   DataView &WriteNum(char val, size_t offset = 0);
@@ -59,19 +70,22 @@ class DataView {
   DataView &WriteNum(float val, size_t offset = 0);
   DataView &WriteNum(double val, size_t offset = 0);
 
-  // T is only available for POD types.
-  template<typename T>
-  T Read(size_t offset = 0) const {
-    T t;
-    Read(&t, offset);
-    return t;
-  }
+  void ReadNum(unsigned char *val, size_t offset = 0) const;
+  void ReadNum(char *val, size_t offset = 0) const;
+  void ReadNum(unsigned *val, size_t offset = 0) const;
+  void ReadNum(int *val, size_t offset = 0) const;
+  void ReadNum(unsigned short *val, size_t offset = 0) const;
+  void ReadNum(short *val, size_t offset = 0) const;
+  void ReadNum(unsigned long long *val, size_t offset = 0) const;
+  void ReadNum(long long *val, size_t offset = 0) const;
+  void ReadNum(float *val, size_t offset = 0) const;
+  void ReadNum(double *val, size_t offset = 0) const;
 
-  // T is only available for POD types.
   template<typename T>
-  void Read(T *t, size_t offset = 0) const {
-    char *dest = static_cast<char *>(t);
-    memcpy(dest, buf_, sizeof(*t));
+  T ReadNum(size_t offset = 0) const {
+    T t;
+    ReadNum(&t, offset);
+    return t;
   }
 
  private:
@@ -82,8 +96,7 @@ class DataView {
 
  private:
   char *buf_;
-  bool is_le_;
+  EndianType endian_;
 };
-
 
 } // namespace bson

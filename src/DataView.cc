@@ -15,12 +15,15 @@ namespace bson {
 // but we can easily implement it.)
 
 #define WRITE_NUM_IMPL(data_type) \
-  if(is_le_) { \
+  if (endian_ == EndianType::kLittleEndian) { \
     little_##data_type##_buf_t t(static_cast<data_type##_t>(val)); \
     writeBuffer(t.data(), sizeof(data_type##_t), offset); \
-  } else { \
-    big_##data_type##_buf_t t(static_cast<data_type##_t>(val)); \
+  } else if (endian_ == EndianType::kBigEndian) { \
+    big_##data_type##_buf_t t(static_cast<data_type##_t >(val)); \
     writeBuffer(t.data(), sizeof(data_type##_t), offset); \
+  } else { \
+    char *t = reinterpret_cast<char *>(&val); \
+    writeBuffer(t, sizeof(data_type##_t), offset); \
   } \
   return (*this)
 
@@ -77,6 +80,59 @@ DataView &DataView::WriteNum(double val, size_t offset) {
   memcpy(&temp, &val, sizeof(val));
   WriteNum(temp, offset);
   return (*this);
+}
+
+#define READ_NUM_IMPL(data_type) \
+  memcpy(val, buf_ + offset, sizeof(data_type##_t)); \
+  if (endian_ == EndianType::kLittleEndian) { \
+    little_to_native_inplace(*val); \
+  } else if (endian_ == EndianType::kBigEndian) { \
+    big_to_native_inplace(*val); \
+  }
+
+
+void DataView::ReadNum(unsigned char *val, size_t offset) const {
+  READ_NUM_IMPL(uint8);
+}
+
+void DataView::ReadNum(char *val, size_t offset) const {
+  READ_NUM_IMPL(int8);
+}
+
+void DataView::ReadNum(unsigned *val, size_t offset) const {
+  READ_NUM_IMPL(uint32);
+}
+
+void DataView::ReadNum(int *val, size_t offset) const {
+  READ_NUM_IMPL(int32);
+}
+
+void DataView::ReadNum(unsigned short *val, size_t offset) const {
+  READ_NUM_IMPL(uint16);
+}
+
+void DataView::ReadNum(short *val, size_t offset) const {
+  READ_NUM_IMPL(int16);
+}
+
+void DataView::ReadNum(unsigned long long *val, size_t offset) const {
+  READ_NUM_IMPL(uint64);
+}
+
+void DataView::ReadNum(long long *val, size_t offset) const {
+  READ_NUM_IMPL(int64);
+}
+
+void DataView::ReadNum(float *val, size_t offset) const {
+  uint32_t temp;
+  ReadNum(&temp, offset);
+  memcpy(val, &temp, sizeof(float));
+}
+
+void DataView::ReadNum(double *val, size_t offset) const {
+  uint64_t temp;
+  ReadNum(&temp, offset);
+  memcpy(val, &temp, sizeof(double));
 }
 
 } // namespace bson
