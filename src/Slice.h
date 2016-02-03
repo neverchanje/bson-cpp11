@@ -26,6 +26,10 @@ class Slice {
       Slice(s, strlen(s)) {
   }
 
+  template <size_t N>
+  Slice(const char(&val)[N])
+      : Slice(&val[0], N - 1) {}
+
   Slice(const char *s, size_t n) :
       str_(s),
       len_(n) {
@@ -46,6 +50,13 @@ class Slice {
 
   int Compare(const Slice &rhs) const {
     return memcmp(str_, rhs.RawData(), len_);
+  }
+
+  void CopyTo(char *dest, bool appendEndingNull = true) const {
+    memcpy(dest, str_, len_);
+    if (appendEndingNull) {
+      dest[len_] = '\0';
+    }
   }
 
  private:

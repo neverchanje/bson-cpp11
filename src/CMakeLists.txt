@@ -8,4 +8,5 @@ add_executable(BSON
         Slice.cc
         DataOutput.cc
         BufBuilder.cc
-        DataView.cc)
+        DataView.cc
+        BSONTypes.h)

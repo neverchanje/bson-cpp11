@@ -9,10 +9,9 @@
 
 #include "DisallowCopying.h"
 #include "DataView.h"
+#include "Slice.h"
 
 namespace bson {
-
-class Slice;
 
 // std::enable_if_t is not available in C++11
 template<bool B, class T = void>
@@ -31,10 +30,18 @@ class BufBuilder {
       std::is_integral<T>::value
           || std::is_floating_point<T>::value> >
   void AppendNum(T v) {
+    ensureCapacity(sizeof(v));
     DataView(buf_ + len_, LittleEndian::value).WriteNum(v);
+    len_ += sizeof(v);
   }
 
-  void AppendStr(const Slice &s);
+  void AppendStr(const Slice &s, bool appendEndingNull = true);
+
+  const char *Buf() const { return buf_; }
+
+  void Clear() {
+    len_ = 0;
+  }
 
  private:
 

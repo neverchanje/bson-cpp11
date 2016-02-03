@@ -6,6 +6,7 @@
 #include <cstring> // memcpy
 
 #include "BufBuilder.h"
+#include "Slice.h"
 
 namespace bson {
 
@@ -45,8 +46,11 @@ void BufBuilder::ensureCapacity(size_t size) {
   }
 }
 
-void BufBuilder::AppendStr(const Slice &s) {
-
+void BufBuilder::AppendStr(const Slice &s, bool appendEndingNull) {
+  size_t slen = s.Len() + (appendEndingNull ? 1 : 0);
+  ensureCapacity(slen);
+  s.CopyTo(buf_ + len_, appendEndingNull);
+  len_ += slen;
 }
 
 } // namespace bson

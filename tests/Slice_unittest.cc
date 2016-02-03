@@ -38,3 +38,11 @@ TEST(Basic, Null) {
   ASSERT_EQ(s.Len(), 0);
   ASSERT_EQ(s.RawData(), nullptr);
 }
+
+TEST(Basic, Copy) {
+  Slice s("abc");
+
+  char actual[4];
+  s.CopyTo(actual);
+  ASSERT_TRUE(memcmp(actual, "abc", sizeof(actual)) == 0);
+}
