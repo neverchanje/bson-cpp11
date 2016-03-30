@@ -3,6 +3,7 @@ project(bson)
 
 # Installs boost library
 find_package(Boost REQUIRED)
+find_library(SILLY_LIBRARY silly)
 
 link_directories(${Boost_LIBRARIES_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
