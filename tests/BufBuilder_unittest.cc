@@ -27,13 +27,13 @@ TEST(Basic, Append) {
   long long val = 1000LL;
   BufBuilder builder;
   builder.AppendNum(val);
-  builder.AppendStr("yes");
+  builder.AppendBytes("yes");
   ASSERT_EQ(0, memcmp(builder.Buf(), little_int64_buf_t(val).data(),
                       sizeof(long long)));
   ASSERT_EQ(0, strcmp(builder.Buf() + sizeof(long long), "yes"));
 
   builder.Clear();
-  builder.AppendStr("true");
+  builder.AppendBytes("true");
   builder.AppendNum(val);
   ASSERT_EQ(0, strcmp(builder.Buf(), "true"));
   ASSERT_EQ(0,

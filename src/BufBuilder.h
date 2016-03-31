@@ -35,26 +35,40 @@ class BufBuilder {
  public:
   BufBuilder(size_t init_size = 512);
 
-  ~BufBuilder() { kill(); }
+  ~BufBuilder() {
+    kill();
+  }
 
+  // Append number to the end of the buffer in endian-less format.
+  // @param "v" only accepts integral and float point numbers.
   template <class T, typename = enable_if_t<std::is_integral<T>::value ||
                                             std::is_floating_point<T>::value>>
   void AppendNum(T v) {
     ensureCapacity(sizeof(v));
-    DataView(buf_ + len_, kLittleEndian).WriteNum(v);
+    DataView(buf_ + len_).WriteNum(v);
     len_ += sizeof(v);
   }
 
-  void AppendStr(Slice s, bool appendEndingNull = true);
+  void AppendBytes(Slice s, bool appendEndingNull = true) {
+    size_t slen = s.Len() + (appendEndingNull ? 1 : 0);
+    ensureCapacity(slen);
+    s.CopyTo(buf_ + len_, appendEndingNull);
+    len_ += slen;
+  }
 
-  const char* Buf() const { return buf_; }
+  const char* Buf() const {
+    return buf_;
+  }
 
-  void Clear() { len_ = 0; }
+  void Clear() {
+    len_ = 0;
+  }
 
  private:
+  // Release the resources and reinitialize the variables.
   void kill();
 
-  // Ensure the capacity of buffer is large enough for the needed
+  // Ensure that the capacity of buffer is large enough for the needed
   // size of memory.
   // @param size is the number of bytes needed.
   void ensureCapacity(size_t size);

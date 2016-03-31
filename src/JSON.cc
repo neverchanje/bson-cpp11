@@ -74,7 +74,9 @@ class JSONParser {
   // is called.
   Status parsePair(Slice field, BSONObjBuilder& builder);
 
-  Status parseError(Slice msg) { return Status::FailedToParse(msg); }
+  Status parseError(Slice msg) {
+    return Status::FailedToParse(msg);
+  }
 
  private:
   const char* buf_;      // the input buffer
@@ -108,7 +110,8 @@ bool JSONParser::advance(const char* token) {
   assert(token != nullptr);
 
   // ignore whitespaces
-  while (pos_ != buf_end_ && isspace(*pos_)) pos_++;
+  while (pos_ != buf_end_ && isspace(*pos_))
+    pos_++;
 
   while (pos_ != buf_end_ && (*token) != '\0' && (*pos_) == (*token)) {
     pos_++;
@@ -119,19 +122,22 @@ bool JSONParser::advance(const char* token) {
 }
 
 Status JSONParser::parseObject(Slice fieldName, BSONObjBuilder& builder) {
-  if (pos_ == buf_end_) return Status::FailedToParse("Expecting an }");
+  if (pos_ == buf_end_)
+    return Status::FailedToParse("Expecting an }");
 
   std::string field;
   field.reserve(FIELD_RESERVE_SIZE);
 
   // parse the first pair
   Status firstRet = parseField(field);
-  if (!firstRet.IsOK()) return firstRet;
+  if (!firstRet.IsOK())
+    return firstRet;
 
   while (advance(COMMA)) {
     field.clear();
     Status ret = parseField(field);
-    if (!ret.IsOK()) return ret;
+    if (!ret.IsOK())
+      return ret;
   }
 
   if (advance(RBRACE)) {
@@ -179,12 +185,15 @@ Status JSONParser::parseValue(Slice field, BSONObjBuilder& builder) {
 
 Status JSONParser::parsePair(Slice field, BSONObjBuilder& builder) {
   Status ret = parseField(field);
-  if (!ret.IsOK()) return ret;
+  if (!ret.IsOK())
+    return ret;
 
-  if (advance(COLON)) return parseError("Expecting :");
+  if (advance(COLON))
+    return parseError("Expecting :");
 
   Status valRet = parseValue(field, builder);
-  if (!valRet.IsOK()) return valRet;
+  if (!valRet.IsOK())
+    return valRet;
 
   return Status::OK();
 }

@@ -20,7 +20,8 @@
 namespace bson {
 
 std::string Status::ToString() const {
-  if (!info_) return "OK";
+  if (!info_)
+    return "OK";
 
   std::string ret;
 

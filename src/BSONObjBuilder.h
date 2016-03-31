@@ -27,7 +27,9 @@ class BSONObjBuilder {
   __DISALLOW_COPYING__(BSONObjBuilder);
 
  public:
-  BSONObj Obj() const { return obj_; };
+  BSONObj Obj() const {
+    return obj_;
+  };
 
   BSONObjBuilder() = default;
 

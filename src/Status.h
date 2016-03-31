@@ -42,13 +42,21 @@ class Status {
   // The error information is generated only when the Status object is not an
   // OK object, which contains merely a pointer.
   //
-  static Status OK() { return Status(); }
-  bool IsOK() const { return code() == ErrorCodes::kOK; }
+  static Status OK() {
+    return Status();
+  }
+
+  bool IsOK() const {
+    return code() == ErrorCodes::kOK;
+  }
 
   static Status FailedToParse(const Slice& msg) {
     return Status(ErrorCodes::kFailedToParse, msg);
   }
-  bool IsFailedToParse() const { return code() == ErrorCodes::kFailedToParse; }
+
+  bool IsFailedToParse() const {
+    return code() == ErrorCodes::kFailedToParse;
+  }
 
   std::string ToString() const;
 
@@ -65,7 +73,8 @@ class Status {
   };
 
   ErrorCodes code() const {
-    if (!info_) return ErrorCodes::kOK;
+    if (!info_)
+      return ErrorCodes::kOK;
     return static_cast<ErrorCodes>(info_->code);
   }
 
@@ -80,6 +89,8 @@ inline Status& Status::operator=(const Status& status) {
   return (*this);
 }
 
-inline Status::Status(const Status& status) { copy(status); }
+inline Status::Status(const Status& status) {
+  copy(status);
+}
 
 }  // namespace bson
