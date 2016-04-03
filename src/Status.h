@@ -50,6 +50,10 @@ class Status {
     return code() == ErrorCodes::kOK;
   }
 
+  explicit operator bool() const {
+    return IsOK();
+  }
+
   static Status FailedToParse(const Slice& msg) {
     return Status(ErrorCodes::kFailedToParse, msg);
   }
