@@ -27,16 +27,25 @@ TEST(Basic, Append) {
   long long val = 1000LL;
   BufBuilder builder;
   builder.AppendNum(val);
-  builder.AppendBytes("yes");
+  builder.AppendStr("yes");
   ASSERT_EQ(0, memcmp(builder.Buf(), little_int64_buf_t(val).data(),
                       sizeof(long long)));
   ASSERT_EQ(0, strcmp(builder.Buf() + sizeof(long long), "yes"));
 
   builder.Clear();
-  builder.AppendBytes("true");
+  builder.AppendStr("true");
   builder.AppendNum(val);
   ASSERT_EQ(0, strcmp(builder.Buf(), "true"));
   ASSERT_EQ(0,
             memcmp(builder.Buf() + strlen("true") + 1,  // +1 for trailing '\0'
                    little_int64_buf_t(val).data(), sizeof(long long)));
+}
+
+TEST(Basic, ReserveAndEmpty) {
+  // empty builder
+  BufBuilder builder(0);
+
+  builder.ReserveBytes(1);
+  builder.ClaimReservedBytes(1);
+  ASSERT_EQ(builder.Len(), 0);
 }
