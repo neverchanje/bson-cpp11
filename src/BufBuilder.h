@@ -18,6 +18,7 @@
 #pragma once
 
 #include <type_traits>
+#include <boost/assert.hpp>
 
 #include "DataView.h"
 #include "Slice.h"
@@ -33,7 +34,14 @@ class BufBuilder {
   __DISALLOW_COPYING__(BufBuilder);
 
  public:
-  BufBuilder(size_t init_size = 512);
+  BufBuilder(size_t init_size = 512)
+      : cap_(init_size), len_(0), buf_(nullptr), reservedBytes_(0) {
+    if (init_size) {
+      buf_ = (char*)std::malloc(init_size);
+      BOOST_ASSERT_MSG(buf_ != nullptr,
+                       "out of memory in BufBuilder::BufBuilder");
+    }
+  }
 
   ~BufBuilder() {
     kill();
@@ -49,19 +57,62 @@ class BufBuilder {
     len_ += sizeof(v);
   }
 
-  void AppendBytes(Slice s, bool appendEndingNull = true) {
+  // By default, AppendStr automatically appends '\0' to the end of the
+  // buffer.
+  void AppendStr(Slice s, bool appendEndingNull = true) {
     size_t slen = s.Len() + (appendEndingNull ? 1 : 0);
     ensureCapacity(slen);
     s.CopyTo(buf_ + len_, appendEndingNull);
     len_ += slen;
   }
 
-  const char* Buf() const {
-    return buf_;
+  // Appends "len" bytes from "s" to buffer.
+  void AppendBuf(const char* s, size_t len) {
+    ensureCapacity(len);
+    memcpy(buf_, s, len);
+  }
+
+  // Leave room for some stuff later.
+  void Skip(size_t n) {
+    ensureCapacity(n);
+    len_ += n;
+  }
+
+  // Reserve room for some number of bytes to be claimed at a later time.
+  void ReserveBytes(size_t n) {
+    ensureCapacity(n);
+    reservedBytes_ += n;
+  }
+
+  // Claim an earlier reservation of some number of bytes. These bytes must
+  // already have been eserved. Appends of up to this many bytes immediately
+  // following a claim are guaranteed to succeed without a need to reallocate.
+  void ClaimReservedBytes(size_t n) {
+    BOOST_ASSERT(reservedBytes_ >= n);
+    reservedBytes_ -= n;
   }
 
   void Clear() {
     len_ = 0;
+    reservedBytes_ = 0;
+  }
+
+ public:
+
+  //
+  // Observers
+  //
+
+  const char* Buf() const {
+    return buf_;
+  }
+
+  size_t Len() const {
+    return len_;
+  }
+
+  size_t Cap() const {
+    return cap_;
   }
 
  private:
@@ -69,7 +120,7 @@ class BufBuilder {
   void kill();
 
   // Ensure that the capacity of buffer is large enough for the needed
-  // size of memory.
+  // size of memory, if not, then grow the capacity.
   // @param size is the number of bytes needed.
   void ensureCapacity(size_t size);
 
@@ -77,6 +128,7 @@ class BufBuilder {
   char* buf_;
   size_t cap_;
   size_t len_;
+  size_t reservedBytes_;
 };
 
-}  // namespace bson
+}  // namespace bson4

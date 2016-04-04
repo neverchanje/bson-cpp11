@@ -17,18 +17,11 @@
 
 #include <cstdlib>
 #include <cstring>  // memcpy
+#include <boost/assert.hpp>
 
 #include "BufBuilder.h"
 
 namespace bson {
-
-BufBuilder::BufBuilder(size_t init_size)
-    : cap_(init_size), len_(0), buf_(nullptr) {
-  if (init_size) {
-    buf_ = (char*)std::malloc(init_size);
-    // TODO: out of memory exception handling
-  }
-}
 
 void BufBuilder::kill() {
   if (buf_) {
@@ -37,11 +30,12 @@ void BufBuilder::kill() {
   }
   cap_ = 0;
   len_ = 0;
+  reservedBytes_ = 0;
 }
 
-void BufBuilder::ensureCapacity(size_t size) {
+void BufBuilder::ensureCapacity(size_t n) {
   size_t oldcap = cap_;
-  size_t minsize = len_ + size;
+  size_t minsize = len_ + n + reservedBytes_;
 
   if (minsize > oldcap) {
     // grow capacity
@@ -49,8 +43,8 @@ void BufBuilder::ensureCapacity(size_t size) {
     if (newcap < minsize)
       newcap = minsize;
     buf_ = (char*)std::realloc(buf_, newcap);
-    // TODO: out of memory exception handling
-
+    BOOST_ASSERT_MSG(buf_ != nullptr,
+                     "out of memory BufBuilder::ensureCapacity");
     cap_ = newcap;
   }
 }
