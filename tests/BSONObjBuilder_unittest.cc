@@ -15,41 +15,4 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-namespace bson {
-
-/**
- * The complete list of BSON types can be found on
- * http://bsonspec.org/spec.html.
- * By now only a subset of them are implemented.
- */
-enum BSONTypes {
-
-  // End of object
-  EOO = 0,
-
-  // double precision floating point value
-  NumberDouble = 1,
-
-  String = 2,
-
-  // an embedded object
-  Object = 3,
-
-  // an embedded array
-  Array = 4,
-
-  // boolean type
-  Boolean = 8,
-
-  Null = 10,
-
-  // 32-bit integers
-  NumberInt = 16,
-
-  // 64-bit integers
-  NumberLong = 18,
-};
-
-}  // namespace bson
+#include <gtest/gtest.h>

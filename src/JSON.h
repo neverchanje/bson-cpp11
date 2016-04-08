@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include <string>
+#include "Slice.h"
 
 namespace bson {
 
 class BSONObj;
 
-BSONObj FromJSON(const std::string& json);
+extern BSONObj FromJSON(Slice json);
 
-std::string ToJSON(const BSONObj& bson);
+extern std::string ToJSON(const BSONObj &bson);
 
 }  // namespace bson

@@ -14,3 +14,38 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include "BSONElement.h"
+
+namespace bson {
+
+size_t BSONElement::Size() const {
+  size_t valueSize = 0;
+  switch (Type()) {
+    case EOO:
+    case Null:
+      break;
+    case Boolean:
+      valueSize = 1;
+      break;
+    case NumberInt:
+      valueSize = 4;
+      break;
+    case NumberDouble:
+    case NumberLong:
+      valueSize = 8;
+      break;
+    case String:
+      valueSize = ValueStrSize() + SZ_ValueStrSize;
+      break;
+    case Object:
+    case Array:
+      valueSize = ValueObjSize();
+      break;
+    default:
+  }
+  totalSize_ = SZ_Type + valueSize + FieldNameSize();
+  return totalSize_;
+}
+
+}  // namespace bson
