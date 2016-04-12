@@ -15,13 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string>
+#include <glog/logging.h>
+
 #include "BSONElement.h"
+#include "Slice.h"
 
 namespace bson {
 
 size_t BSONElement::Size() const {
   size_t valueSize = 0;
-  switch (Type()) {
+  BSONType t = Type();
+  switch (t) {
     case EOO:
     case Null:
       break;
@@ -43,9 +48,48 @@ size_t BSONElement::Size() const {
       valueSize = ValueObjSize();
       break;
     default:
+      BOOST_ASSERT(IsValidBSONTypes(t));
   }
   totalSize_ = SZ_Type + valueSize + FieldNameSize();
   return totalSize_;
 }
+
+inline const BSONElement &BSONElement::checkType(BSONType type) const {
+  DCHECK_EQ(type, Type())
+      << "unexpected or missing of type value in BSON object: "
+      << BSONTypesToString(Type());
+  return *this;
+}
+
+template <> int BSONElement::ValueOf<int>() const {
+  checkType(NumberInt);
+  return *reinterpret_cast<const int *>(RawValue());
+}
+
+template <> long long BSONElement::ValueOf<long long>() const {
+  checkType(NumberLong);
+  return *reinterpret_cast<const long long *>(RawValue());
+}
+
+template <> double BSONElement::ValueOf<double>() const {
+  checkType(NumberDouble);
+  return *reinterpret_cast<const double *>(RawValue());
+}
+
+template <> bool BSONElement::ValueOf<bool>() const {
+  checkType(Boolean);
+  return *reinterpret_cast<const bool *>(RawValue());
+}
+
+template <> Slice BSONElement::ValueOf<Slice>() const {
+  checkType(String);
+  size_t l = ValueStrSize() - 1;
+  return Slice(RawValue() + sizeof(int), l);
+}
+
+//template <> const char* BSONElement::ValueOf<const char *>() const {
+//  checkType(String);
+//  return (RawValue()+ sizeof(int));
+//}
 
 }  // namespace bson

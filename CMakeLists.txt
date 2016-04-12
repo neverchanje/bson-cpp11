@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.3)
 project(bson)
 
+# Use our own cmake scripts
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmakes")
+
 # Installs boost library
 find_package(Boost REQUIRED)
+find_package(Glog REQUIRED)
 find_library(SILLY_LIBRARY silly)
 
 link_directories(${Boost_LIBRARIES_DIRS})

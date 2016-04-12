@@ -17,15 +17,12 @@
 
 #pragma once
 
-#include <cstddef>
 #include <cstring>
-#include <boost/assert.hpp>
-#include <folly/Likely.h>
 #include <cstdint>
+#include <boost/assert.hpp>
 
-#include "BSONTypes.h"
+#include "BSONType.h"
 #include "DataView.h"
-#include "BSONObj.h"
 
 namespace bson {
 
@@ -37,7 +34,7 @@ namespace bson {
 //
 //  internals:
 //  <type><fieldName'\0'><value>
-
+//
 class BSONElement {
   static const size_t SZ_Type = 1;
   static const size_t SZ_ValueStrSize = 4;
@@ -47,22 +44,35 @@ class BSONElement {
       : fieldNameSize_(-1), elem_(data), totalSize_(0) {}
 
  public:
+  //
+  // Observers
+  //
+
   // Total size of the element.
   size_t Size() const;
 
-  BSONTypes Type() const {
+  BSONType Type() const {
     char ret = ConstDataView(elem_).ReadNum<char>();
-    return static_cast<BSONTypes>(ret);
+    return static_cast<BSONType>(ret);
   }
 
   // Field name of the element.  e.g., for
   // name : "Joe"
   // "name" is the fieldname
-  const char *FieldName() const {
-    if (IsEOO()) {
+  const char *RawFieldName() const {
+    if (Type() == BSONType::EOO) {
       return "";
     }
     return elem_ + sizeof(char);
+  }
+
+  // @return raw data of value.
+  const char *RawValue() const {
+    return elem_ + sizeof(char) + FieldNameSize();
+  }
+
+  const char *RawData() const {
+    return elem_;
   }
 
   // @return size of field name including terminating null.
@@ -74,35 +84,28 @@ class BSONElement {
     return static_cast<size_t>(fieldNameSize_);
   }
 
-  // @return raw data of value.
-  const char *Value() const {
-    return elem_ + sizeof(char) + FieldNameSize();
-  }
-
-  // Must assure that the type of this element is BSONTypes::String first.
+  // Must assure that the type of this element is BSONType::String first.
   // @return String size including terminating null
   size_t ValueStrSize() const {
-    return static_cast<size_t>(ConstDataView(Value()).ReadNum<uint32_t>());
+    return static_cast<size_t>(ConstDataView(RawValue()).ReadNum<int>());
   }
 
-  // Must assure that the type of this element is BSONTypes::Object or
-  // BSONTypes::Array first.
+  // Must assure that the type of this element is BSONType::Object or
+  // BSONType::Array first.
   // @return embedded object size including the size itself
   size_t ValueObjSize() const {
-    return static_cast<size_t>(ConstDataView(Value()).ReadNum<uint32_t>());
+    return static_cast<size_t>(ConstDataView(RawValue()).ReadNum<int>());
   }
 
-  bool IsEOO() const {
-    return Type() == BSONTypes::EOO;
+  // Stores the value of this BSONElement into val.
+  template <class T> T ValueOf() const {
+    BOOST_ASSERT_MSG(0, "Unexpected type of value in BSON object.");
+    return T();
   }
 
  private:
   // Check whether the type of this element equals to "type".
-  inline const BSONElement &checkType(BSONTypes type) const {
-    BOOST_ASSERT_MSG(type != Type(),
-                     "unexpected or missing of type value in BSON object");
-    return *this;
-  }
+  inline const BSONElement &checkType(BSONType type) const;
 
  private:
   const char *elem_;

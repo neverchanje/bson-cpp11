@@ -15,10 +15,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gtest/gtest.h>
+#include "BSONType.h"
 
-#include "BSONElement.h"
+namespace bson {
 
-using namespace bson;
+// TODO: error handling / abort on undefined "t"?
+const char *BSONTypesToString(BSONType t) {
+  switch (t) {
+    case EOO:
+      return "EOO";
+    case NumberDouble:
+      return "NumberDouble";
+    case String:
+      return "String";
+    case Object:
+      return "Object";
+    case Array:
+      return "Array";
+    case Boolean:
+      return "Boolean";
+    case Null:
+      return "Null";
+    case NumberInt:
+      return "NumberInt";
+    case NumberLong:
+      return "NumberLong";
+    default:
+      return "Unknown type";
+  }
+}
 
-TEST(Basic, Init) {}
+}  // namespace bson

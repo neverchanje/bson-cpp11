@@ -26,15 +26,21 @@ using namespace boost::endian;
 TEST(Basic, Append) {
   long long val = 1000LL;
   BufBuilder builder;
+
   builder.AppendNum(val);
   builder.AppendStr("yes");
+  builder.AppendBuf("000", 3);
+
   ASSERT_EQ(0, memcmp(builder.Buf(), little_int64_buf_t(val).data(),
                       sizeof(long long)));
   ASSERT_EQ(0, strcmp(builder.Buf() + sizeof(long long), "yes"));
+  ASSERT_EQ(0, memcmp(builder.Buf() + sizeof(long long) + 4, "000", 3));
+  ASSERT_EQ(builder.Len(), sizeof(long long) + 4 + 3);
 
   builder.Clear();
   builder.AppendStr("true");
   builder.AppendNum(val);
+
   ASSERT_EQ(0, strcmp(builder.Buf(), "true"));
   ASSERT_EQ(0,
             memcmp(builder.Buf() + strlen("true") + 1,  // +1 for trailing '\0'

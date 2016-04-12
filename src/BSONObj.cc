@@ -14,3 +14,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <sstream>
+
+#include "BSONObj.h"
+
+namespace bson {
+
+std::string BSONObj::Dump() const {
+  std::ostringstream oss;
+  for (auto i = begin(); i != end(); i++) {
+    const BSONElement &e = *i;
+    oss << e.RawFieldName() << ": " << BSONTypesToString(e.Type()) << "\n";
+  }
+  return oss.str();
+}
+
+}  // namespace bson

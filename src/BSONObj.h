@@ -19,41 +19,15 @@
 
 #include <silly/IteratorFacade.h>
 
-#include "BSONObjBuilder.h"
 #include "BSONElement.h"
+#include "Slice.h"
 
 namespace bson {
 
 // A BSON object is an unordered set of name/value pairs.
 //
-// BSON object format:
-// <unsigned totalSize> {<byte BSONType><cstring FieldName><Data>}* EOO
+// BSON object format: @see BSONObjBuilder.h
 //
-// totalSize includes itself
-//
-// Data:
-// Bool:      <byte>
-// EOO:       nothing follows
-// Undefined: nothing follows
-// OID:       an OID object
-// NumberDouble: <double>
-// NumberInt: <int32>
-// NumberDecimal: <dec128>
-// String:    <unsigned32 strsizewithnull><cstring>
-// Date:      <8bytes>
-// Regex:     <cstring regex><cstring options>
-// Object:    a nested object, leading with its entire size, which terminates
-// with EOO.
-// Array:     same as object
-// DBRef:     <strlen> <cstring ns> <oid>
-// DBRef:     a database reference: basically a collection name plus an Object
-// ID
-// BinData:   <int len> <byte subtype> <byte[len] data>
-// Code:      a function (not a closure): same format as String.
-// Symbol:    a language symbol (say a python symbol).  same format as String.
-// Code With Scope: <total size><String><Object>
-//
-// EOO: End Of Object
 
 class BSONObj {
   static const size_t SZ_TotalSize = 4;
@@ -62,12 +36,57 @@ class BSONObj {
  public:
   BSONObj(const char *bson_data)
       : data_(bson_data),
-        end_(data_ + ConstDataView(data_).ReadNum<unsigned>() - SZ_EOO) {}
+        end_(data_ + ConstDataView(data_).ReadNum<int>() - SZ_EOO) {}
 
-  void Dump() const {}
+  // intentionally copyable
+
+  // (DEBUG)
+  std::string Dump() const;
 
  public:
-  class Iterator;
+  class Iterator : public silly::IteratorFacade<Iterator, BSONElement const,
+                                                silly::ForwardIteratorTag> {
+    friend class BSONObj;
+
+   public:
+    Iterator(const Iterator &other) : pos_(other.pos_), obj_(other.obj_) {}
+
+    const Iterator &operator=(const Iterator &other) {
+      pos_ = other.pos_;
+      obj_ = other.obj_;
+      return *this;
+    }
+
+   private:
+    // BSONObj::Iterator can only be constructed inside BSONObj.
+    Iterator(const char *data, const BSONObj &obj) : pos_(data), obj_(&obj) {}
+
+    //
+    // The following functions are required for using silly::IteratorFacade.
+    //
+    friend class silly::IteratorCoreAccess;
+
+    // Lazy dereference.
+    const BSONElement &dereference() const {
+      if (!e_ || e_->RawData() != pos_)
+        e_.reset(new BSONElement(pos_));
+      return *e_;
+    }
+
+    void increment() {
+      assert(pos_ < obj_->end_);
+      pos_ += BSONElement(pos_).Size();
+    }
+
+    bool equal(const Iterator &other) const {
+      return pos_ == other.pos_;
+    }
+
+   private:
+    const char *pos_;
+    const BSONObj *obj_;
+    mutable std::unique_ptr<BSONElement> e_;
+  };
 
   //
   // "begin" and "end" function in stdlib-style, so that we're able to use the
@@ -86,7 +105,7 @@ class BSONObj {
   // it returns an iterator, otherwise it returns an iterator to BSONObj::End().
   Iterator find(Slice field) const {
     for (auto it = begin(); it != end(); it++) {
-      if (strcmp(field.RawData(), it->FieldName()) == 0) {
+      if (strcmp(field.RawData(), it->RawFieldName()) == 0) {
         return it;
       }
     }
@@ -114,7 +133,7 @@ class BSONObj {
 
   // @return total size of the BSON object in bytes.
   size_t TotalSize() const {
-    return static_cast<size_t>(ConstDataView(data_).ReadNum<unsigned>());
+    return static_cast<size_t>(ConstDataView(data_).ReadNum<int>());
   }
 
  private:
@@ -122,38 +141,9 @@ class BSONObj {
   const char *end_;
 };
 
-class BSONObj::Iterator
-    : public silly::IteratorFacade<Iterator, BSONElement const,
-                                   silly::ForwardIteratorTag> {
-  friend class BSONObj;
-
-  // intentionally copyable
-
- private:
-  // BSONObj::Iterator can only be constructed internally by BSONObj.
-  Iterator(const char *data, const BSONObj &obj) : pos_(data), obj_(&obj) {}
-
-  //
-  // The following functions are required for using silly::IteratorFacade.
-  //
-  friend class silly::IteratorCoreAccess;
-
-  BSONElement const &dereference() const {
-    return BSONElement(pos_);
-  }
-
-  void increment() {
-    assert(pos_ < obj_->end_);
-    pos_ += BSONElement(pos_).Size();
-  }
-
-  bool equal(const Iterator &other) const {
-    return pos_ == other.pos_;
-  }
-
- private:
-  const char *pos_;
-  const BSONObj *obj_;
+struct BSONArray : public BSONObj {
+  BSONArray(const char *data) : BSONObj(data) {}
+  explicit BSONArray(const BSONObj obj) : BSONArray(obj.RawData()) {}
 };
 
 }  // namespace bson

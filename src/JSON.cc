@@ -48,9 +48,9 @@ class JSONParser {
     // A bson object as well as bson array begins with a left brace but without
     // a specific field name.
     if (advance(LBRACE)) {
-      return parseObject(nullptr, builder);
+      return parseObject(nullptr, builder, false);
     } else if (advance(LBRACKET)) {
-      return parseArray(nullptr, builder);
+      return parseArray(nullptr, builder, false);
     }
     return parseError("Expecting { or [");
   }
@@ -107,12 +107,23 @@ class JSONParser {
   //
   // NOTE: Left brace of this object has been skipped.
   //
-  Status parseObject(Slice field, BSONObjBuilder &builder) {
+  Status parseObject(Slice field, BSONObjBuilder &builder, bool subObj = true) {
     if (cur_ == buf_end_)
       return parseError("Expecting an }");
 
+    std::unique_ptr<BSONObjBuilder> subBuilder;
+    BSONObjBuilder *objBuilder = &builder;
+    if(subObj) {
+      subBuilder.reset(new BSONObjBuilder());
+      objBuilder = subBuilder.get();
+    }
+
     if (advance(RBRACE)) {
       // empty object
+      // TODO: Optimization on building empty objects.
+      if(subObj) {
+        builder.AppendObject(field, subBuilder->Done());
+      }
       return Status::OK();
     }
 
@@ -121,7 +132,7 @@ class JSONParser {
 
     do {
       fieldName.clear();
-      Status ret = parsePair(&fieldName, builder);
+      Status ret = parsePair(&fieldName, *objBuilder);
       if (!ret)
         return ret;
     } while (advance(COMMA));
@@ -166,7 +177,7 @@ class JSONParser {
   //
   // Parse the content of FIELD and store the result into "result".
   // Note: iff FIELD is a quoted string, then only content inside quotes are
-  // stored into result.
+  // stored into "result".
   //
   Status parseField(std::string *result) {
     if (peek(DOUBLEQUOTE) || peek(SINGLEQUOTE)) {
@@ -216,7 +227,7 @@ class JSONParser {
   // @Nullable "allowSet" contains a set of characters that are allowed, if it's
   // set. Iff not set, it accepts all characters.
   // @Nullable "terminalSet" contains characters that signal the end.
-  // Note: Character lies in terminalSet won't be appended to "result".
+  // Note: Character lies in "terminalSet" won't be appended to "result".
   //
   Status parseChars(std::string *result, const char *allowSet,
                     const char *terminalSet = nullptr) {
@@ -344,19 +355,30 @@ class JSONParser {
   //   | VALUE , ELEMENTS
   //
   // NOTE: left bracket of this array has been skipped.
+  // @param subObj indicates whether a new BSONObjBuilder is required.
   //
-  Status parseArray(Slice field, BSONObjBuilder &builder) {
+  Status parseArray(Slice field, BSONObjBuilder &builder, bool subObj = true) {
     if (cur_ == buf_end_) {
       return parseError("Expecting an ]");
     }
 
+    std::unique_ptr<BSONObjBuilder> subBuilder;
+    BSONObjBuilder *objBuilder = &builder;
+    if(subObj) {
+      subBuilder.reset(new BSONObjBuilder());
+      objBuilder = subBuilder.get();
+    }
+
     if (advance(RBRACKET)) {
       // empty array
+      if(subObj) {
+        builder.Append(field, BSONArray(subBuilder->Done()));
+      }
       return Status::OK();
     }
 
     do {
-      Status ret = parseValue(field, builder);
+      Status ret = parseValue(nullptr, *objBuilder);
       if (!ret)
         return ret;
     } while (advance(COMMA));
@@ -364,6 +386,9 @@ class JSONParser {
     if (!advance(RBRACKET))
       return parseError("Expecting } or ,");
 
+    if(subObj) {
+      builder.Append(field, BSONArray(subBuilder->Done()));
+    }
     return Status::OK();
   }
 
@@ -393,7 +418,8 @@ BSONObj FromJSON(Slice json) {
   BSONObjBuilder builder;
   JSONParser parser(json);
 
-  if (!parser.Parse(builder)) {
+  Status s;
+  if (!(s = parser.Parse(builder))) {
     // error handling
   }
 

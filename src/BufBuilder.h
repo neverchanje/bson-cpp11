@@ -37,7 +37,7 @@ class BufBuilder {
   BufBuilder(size_t init_size = 512)
       : cap_(init_size), len_(0), buf_(nullptr), reservedBytes_(0) {
     if (init_size) {
-      buf_ = (char*)std::malloc(init_size);
+      buf_ = (char*)malloc(init_size);
       BOOST_ASSERT_MSG(buf_ != nullptr,
                        "out of memory in BufBuilder::BufBuilder");
     }
@@ -69,7 +69,8 @@ class BufBuilder {
   // Appends "len" bytes from "s" to buffer.
   void AppendBuf(const char* s, size_t len) {
     ensureCapacity(len);
-    memcpy(buf_, s, len);
+    memcpy(buf_ + len_, s, len);
+    len_ += len;
   }
 
   // Leave room for some stuff later.
@@ -85,7 +86,7 @@ class BufBuilder {
   }
 
   // Claim an earlier reservation of some number of bytes. These bytes must
-  // already have been eserved. Appends of up to this many bytes immediately
+  // already have been reserved. Appends of up to this many bytes immediately
   // following a claim are guaranteed to succeed without a need to reallocate.
   void ClaimReservedBytes(size_t n) {
     BOOST_ASSERT(reservedBytes_ >= n);
@@ -106,6 +107,10 @@ class BufBuilder {
     return buf_;
   }
 
+  char* Buf() {
+    return buf_;
+  }
+
   size_t Len() const {
     return len_;
   }
@@ -113,6 +118,10 @@ class BufBuilder {
   size_t Cap() const {
     return cap_;
   }
+
+  //  size_t Reserved() const {
+  //    return reservedBytes_;
+  //  }
 
  private:
   // Release the resources and reinitialize the variables.
