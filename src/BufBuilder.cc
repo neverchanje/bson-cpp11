@@ -17,6 +17,7 @@
 
 #include <cstdlib>
 #include <cstring>  // memcpy
+#include <boost/assert.hpp>
 
 #include "BufBuilder.h"
 
