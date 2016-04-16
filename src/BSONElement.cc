@@ -87,7 +87,7 @@ template <> Slice BSONElement::ValueOf<Slice>() const {
   return Slice(RawValue() + sizeof(int), l);
 }
 
-//template <> const char* BSONElement::ValueOf<const char *>() const {
+// template <> const char* BSONElement::ValueOf<const char *>() const {
 //  checkType(String);
 //  return (RawValue()+ sizeof(int));
 //}

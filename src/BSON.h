@@ -17,8 +17,14 @@
 
 #pragma once
 
-#include "BSONObj.h"
+#include "Slice.h"
 
-/*
- * C++ representation of BSON, an extended JSON in binary representation.
- */
+namespace bson {
+
+class BSONObj;
+
+extern BSONObj FromJSON(Slice json);
+
+extern std::string ToJSON(const BSONObj &bson);
+
+}  // namespace bson

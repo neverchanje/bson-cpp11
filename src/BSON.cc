@@ -15,16 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include "Slice.h"
+#include "BSON.h"
+#include "detail/BSONParser.h"
 
 namespace bson {
 
-class BSONObj;
+BSONObj FromJSON(Slice json) {
+  using detail::BSONParser;
 
-extern BSONObj FromJSON(Slice json);
+  BSONObjBuilder builder;
+  BSONParser parser(json);
 
-extern std::string ToJSON(const BSONObj &bson);
+  Status s;
+  if (!(s = parser.Parse(builder))) {
+    // error handling
+  }
+
+  return builder.Obj();
+}
 
 }  // namespace bson

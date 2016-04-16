@@ -1,18 +1,52 @@
-/**
- * Copyright (C) 2016, Wu Tao All rights reserved.
+/*
+ * Copyright 2016 Facebook, Inc.
  *
- * bson is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * bson is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-#pragma once
+#ifndef FOLLY_SAFEASSERT_H_
+#define FOLLY_SAFEASSERT_H_
+
+#include <folly/Portability.h>
+#include <folly/Preprocessor.h>
+
+/**
+ * Verify that the expression is true. If not, prints an error message
+ * (containing msg) to stderr and abort()s. Just like CHECK(), but only
+ * logs to stderr and only does async-signal-safe calls.
+ */
+#define FOLLY_SAFE_CHECK(expr, msg) \
+  ((expr) ? static_cast<void>(0) : \
+   ::folly::detail::assertionFailure( \
+       FB_STRINGIZE(expr), (msg), __FILE__, __LINE__, __PRETTY_FUNCTION__))
+
+/**
+ * In debug mode, verify that the expression is true. Otherwise, do nothing
+ * (do not even evaluate expr). Just like assert() or DCHECK(), but only
+ * logs to stderr and only does async-signal-safe calls.
+ */
+#ifdef NDEBUG
+#define FOLLY_SAFE_DCHECK(expr, msg) (static_cast<void>(0))
+#else
+#define FOLLY_SAFE_DCHECK FOLLY_SAFE_CHECK
+#endif
+
+namespace folly { namespace detail {
+
+FOLLY_NORETURN void assertionFailure(const char* expr, const char* msg,
+                                     const char* file, unsigned int line,
+                                     const char* function);
+
+}}  // namespace folly
+
+#endif /* FOLLY_SAFEASSERT_H_ */

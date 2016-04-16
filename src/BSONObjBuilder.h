@@ -170,6 +170,16 @@ class BSONObjBuilder {
   // Finish building.
   // @return BSONObj constructed by this BSONObjBuilder.
   BSONObj Done() {
+    DoneFast();
+    return Obj();  // RVO
+  }
+
+  bool HasDone() const {
+    return doneCalled_;
+  }
+
+  // Finish building.
+  void DoneFast() {
     if (!doneCalled_) {
       doneCalled_ = true;
       appendBSONType(BSONType::EOO);
@@ -178,7 +188,6 @@ class BSONObjBuilder {
       // set "totalSize" field of the bson object
       DataView(buf_.Buf()).WriteNum(static_cast<int>(buf_.Len()));
     }
-    return Obj(); // RVO
   }
 
   // @return BSONObj constructed by this BSONObjBuilder.

@@ -25,7 +25,8 @@ std::string BSONObj::Dump() const {
   std::ostringstream oss;
   for (auto i = begin(); i != end(); i++) {
     const BSONElement &e = *i;
-    oss << e.RawFieldName() << ": " << BSONTypesToString(e.Type()) << "\n";
+    oss << "Field: " << e.RawFieldName()
+        << ", Type: " << BSONTypesToString(e.Type()) << "\n";
   }
   return oss.str();
 }

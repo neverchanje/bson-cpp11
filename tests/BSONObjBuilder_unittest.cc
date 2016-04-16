@@ -56,7 +56,7 @@ static void AppendBSONValue(BSONObjBuilder &builder, BSONType type,
 
 TEST(Append, Simple) {
   BSONObjBuilder builder;
-  struct {
+  struct S {
     BSONType type;
     boost::any data;
   } a[] = {{NumberInt, std::numeric_limits<int>::max()},
@@ -67,8 +67,7 @@ TEST(Append, Simple) {
            {NumberDouble, std::numeric_limits<double>::min()},
            {Boolean, true},
            {Boolean, false},
-           {String, Slice("abc")}
-  };
+           {String, Slice("abc")}};
 
   for (const auto &data : a) {
     AppendBSONValue(builder, data.type, data.data);
@@ -111,4 +110,6 @@ TEST(Append, Simple) {
   }
 
   ASSERT_TRUE(i == obj.end());
+  ASSERT_EQ(obj.NumFields(), sizeof(a) / sizeof(S));
+  LOG(INFO) << obj.Dump();
 }

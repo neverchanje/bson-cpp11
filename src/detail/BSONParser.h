@@ -15,15 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <boost/assert.hpp>  // supports adding custom message on assertion
+#pragma once
+
+#include <boost/assert.hpp>
 #include <sstream>
 
-#include "JSON.h"
 #include "DisallowCopying.h"
 #include "BSONObjBuilder.h"
 #include "Status.h"
 
 namespace bson {
+namespace detail {
 
 static const char *LBRACE = "{", *RBRACE = "}", *LBRACKET = "[",
                   *RBRACKET = "]", *LPAREN = "(", *RPAREN = ")", *COLON = ":",
@@ -35,11 +37,11 @@ static const char *LBRACE = "{", *RBRACE = "}", *LBRACKET = "[",
 
 enum { FIELD_RESERVE_SIZE = 4096, STRINGVAL_RESERVE_SIZE = 4096 };
 
-class JSONParser {
-  __DISALLOW_COPYING__(JSONParser);
+class BSONParser {
+  __DISALLOW_COPYING__(BSONParser);
 
  public:
-  JSONParser(Slice json)
+  BSONParser(Slice json)
       : buf_(json.RawData()),
         cur_(buf_),
         buf_end_(json.RawData() + json.Len()) {}
@@ -113,7 +115,7 @@ class JSONParser {
 
     std::unique_ptr<BSONObjBuilder> subBuilder;
     BSONObjBuilder *objBuilder = &builder;
-    if(subObj) {
+    if (subObj) {
       subBuilder.reset(new BSONObjBuilder());
       objBuilder = subBuilder.get();
     }
@@ -121,8 +123,9 @@ class JSONParser {
     if (advance(RBRACE)) {
       // empty object
       // TODO: Optimization on building empty objects.
-      if(subObj) {
-        builder.AppendObject(field, subBuilder->Done());
+      objBuilder->DoneFast();
+      if (subObj) {
+        builder.Append(field, subBuilder->Obj());
       }
       return Status::OK();
     }
@@ -139,6 +142,11 @@ class JSONParser {
 
     if (!advance(RBRACE)) {
       return parseError("Expecting } or ,");
+    }
+
+    objBuilder->DoneFast();
+    if (subObj) {
+      builder.Append(field, subBuilder->Obj());
     }
 
     return Status::OK();
@@ -232,8 +240,10 @@ class JSONParser {
   Status parseChars(std::string *result, const char *allowSet,
                     const char *terminalSet = nullptr) {
     while (cur_ < buf_end_) {
-      if (terminalSet && !strchr(terminalSet, *cur_))
+      if (terminalSet && strchr(terminalSet, *cur_)) {
+        cur_++;  // Skip this terminated character.
         break;
+      }
 
       // iff *cur_ is not in allowSet, then finish parsing and return success.
       if (allowSet && !strchr(allowSet, *cur_)) {
@@ -242,7 +252,7 @@ class JSONParser {
 
       // Two-character escape sequences used in json are defined in ECMA-404
       // (http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
-      if (*cur_ != '\\' && cur_ + 1 < buf_end_) {
+      if (*cur_ == '\\' && cur_ + 1 < buf_end_) {
         switch (*(++cur_)) {
           case '"':
             result->push_back('\"');
@@ -340,6 +350,10 @@ class JSONParser {
       builder.AppendDouble(field, std::numeric_limits<double>::infinity());
     } else if (advance("-Infinity")) {
       builder.AppendDouble(field, -std::numeric_limits<double>::infinity());
+    } else {
+      Status ret;
+      if (!(ret = parseNumber(field, builder)))
+        return ret;
     }
 
     return Status::OK();
@@ -364,15 +378,16 @@ class JSONParser {
 
     std::unique_ptr<BSONObjBuilder> subBuilder;
     BSONObjBuilder *objBuilder = &builder;
-    if(subObj) {
+    if (subObj) {
       subBuilder.reset(new BSONObjBuilder());
       objBuilder = subBuilder.get();
     }
 
     if (advance(RBRACKET)) {
       // empty array
-      if(subObj) {
-        builder.Append(field, BSONArray(subBuilder->Done()));
+      objBuilder->DoneFast();
+      if (subObj) {
+        builder.Append(field, BSONArray(subBuilder->Obj()));
       }
       return Status::OK();
     }
@@ -386,8 +401,52 @@ class JSONParser {
     if (!advance(RBRACKET))
       return parseError("Expecting } or ,");
 
-    if(subObj) {
-      builder.Append(field, BSONArray(subBuilder->Done()));
+    objBuilder->DoneFast();
+    if (subObj) {
+      builder.Append(field, BSONArray(subBuilder->Obj()));
+    }
+    return Status::OK();
+  }
+
+  Status parseNumber(Slice field, BSONObjBuilder &builder) {
+    Status ret;
+    char *pendll, *pendd;
+    int err_num;
+
+    // ignore whitespaces
+    while (cur_ < buf_end_ && isspace(*cur_))
+      cur_++;
+
+    // Try parsing double.
+    // Values that can be parsed into double can be parsed into long long as
+    // well.
+    errno = 0;
+    double dr = strtod(cur_, &pendd);
+    err_num = errno;
+
+    if (pendd == nullptr) {
+      return parseError("Invalid conversion from string to number");
+    }
+
+    if (err_num == ERANGE) {
+      return parseError("Value cannot fit in double");
+    }
+
+    // Try parsing long long
+    errno = 0;
+    long long llr = strtoll(cur_, &pendll, 10);
+    err_num = errno;
+
+    if (pendll < pendd || err_num == ERANGE) {
+      builder.Append(field, dr);
+      cur_ = pendd;
+    } else if (llr <= std::numeric_limits<int>::max() ||
+               llr >= std::numeric_limits<int>::min()) {
+      builder.Append(field, static_cast<int>(llr));
+      cur_ = pendll;
+    } else {
+      builder.Append(field, llr);
+      cur_ = pendll;
     }
     return Status::OK();
   }
@@ -397,10 +456,10 @@ class JSONParser {
   Status parseError(Slice msg) {
     std::ostringstream oss;
     oss << msg;
-    oss << ": offset:";
+    oss << "\noffset:";
     oss << offset();
-    oss << " of:";
-    oss << buf_;
+    oss << "\nof:";
+    oss << cur_;
     return Status::FailedToParse(oss.str());
   }
 
@@ -414,16 +473,5 @@ class JSONParser {
   const char *cur_;            // current position of the buffer
 };
 
-BSONObj FromJSON(Slice json) {
-  BSONObjBuilder builder;
-  JSONParser parser(json);
-
-  Status s;
-  if (!(s = parser.Parse(builder))) {
-    // error handling
-  }
-
-  return builder.Obj();
-}
-
+}  // namespace detail
 }  // namespace bson

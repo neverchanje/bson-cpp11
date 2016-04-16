@@ -15,11 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/assert.hpp>
+
 #include "BSONType.h"
 
 namespace bson {
 
-// TODO: error handling / abort on undefined "t"?
 const char *BSONTypesToString(BSONType t) {
   switch (t) {
     case EOO:
@@ -41,7 +42,8 @@ const char *BSONTypesToString(BSONType t) {
     case NumberLong:
       return "NumberLong";
     default:
-      return "Unknown type";
+      BOOST_ASSERT_MSG(0, "Unknown type");
+      return nullptr;
   }
 }
 
