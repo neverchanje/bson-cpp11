@@ -20,6 +20,7 @@
 
 #include "BSONElement.h"
 #include "Slice.h"
+#include "UnixTimestamp.h"
 
 namespace bson {
 
@@ -38,6 +39,7 @@ size_t BSONElement::Size() const {
       break;
     case NumberDouble:
     case NumberLong:
+    case Timestamp:
       valueSize = 8;
       break;
     case String:
@@ -85,6 +87,11 @@ template <> Slice BSONElement::ValueOf<Slice>() const {
   checkType(String);
   size_t l = ValueStrSize() - 1;
   return Slice(RawValue() + sizeof(int), l);
+}
+
+template <> UnixTimestamp BSONElement::ValueOf<UnixTimestamp>() const {
+  checkType(Timestamp);
+  return *reinterpret_cast<const UnixTimestamp *>(RawValue());
 }
 
 // template <> const char* BSONElement::ValueOf<const char *>() const {

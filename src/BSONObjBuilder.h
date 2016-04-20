@@ -21,6 +21,19 @@
 #include "Slice.h"
 #include "DisallowCopying.h"
 #include "BufBuilder.h"
+#include "UnixTimestamp.h"
+
+//
+// Foward declaration of UnixTimestamp.
+//
+
+namespace silly {
+class UnixTimestamp;
+}
+
+namespace bson {
+using silly::UnixTimestamp;
+}
 
 namespace bson {
 
@@ -164,6 +177,17 @@ class BSONObjBuilder {
 
   BSONObjBuilder &Append(Slice field, const BSONArray &arr) {
     return AppendArray(field, arr);
+  }
+
+  BSONObjBuilder &AppendTimestamp(Slice field, const UnixTimestamp &t) {
+    appendBSONType(BSONType::Timestamp);
+    buf_.AppendStr(field);
+    buf_.AppendNum(static_cast<int64_t>(t.MicrosSinceEpoch()));
+    return *this;
+  }
+
+  BSONObjBuilder &Append(Slice field, const UnixTimestamp &t) {
+    return AppendTimestamp(field, t);
   }
 
  public:

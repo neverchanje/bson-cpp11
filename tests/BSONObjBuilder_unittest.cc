@@ -49,6 +49,11 @@ static void AppendBSONValue(BSONObjBuilder &builder, BSONType type,
       break;
     case String:
       builder.Append("string", *boost::unsafe_any_cast<Slice>(&data));
+      break;
+    case Timestamp:
+      builder.Append("timestamp",
+                     *boost::unsafe_any_cast<UnixTimestamp>(&data));
+      break;
     default:
       break;
   }
@@ -67,7 +72,8 @@ TEST(Append, Simple) {
            {NumberDouble, std::numeric_limits<double>::min()},
            {Boolean, true},
            {Boolean, false},
-           {String, Slice("abc")}};
+           {String, Slice("abc")},
+           {Timestamp, UnixTimestamp::Now()}};
 
   for (const auto &data : a) {
     AppendBSONValue(builder, data.type, data.data);
@@ -100,6 +106,11 @@ TEST(Append, Simple) {
       case String: {
         auto v = *boost::unsafe_any_cast<Slice>(&data.data);
         ASSERT_EQ(v.ToString(), i->ValueOf<Slice>().ToString());
+        break;
+      }
+      case Timestamp: {
+        auto v = *boost::unsafe_any_cast<UnixTimestamp>(&data.data);
+        ASSERT_EQ(v.ToString(), i->ValueOf<UnixTimestamp>().ToString());
         break;
       }
       default:

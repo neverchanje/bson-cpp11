@@ -16,13 +16,11 @@
  */
 
 #include "BSON.h"
-#include "detail/BSONParser.h"
+#include "BSONParser.h"
 
 namespace bson {
 
 BSONObj FromJSON(Slice json) {
-  using detail::BSONParser;
-
   BSONObjBuilder builder;
   BSONParser parser(json);
 

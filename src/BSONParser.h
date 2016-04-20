@@ -25,7 +25,6 @@
 #include "Status.h"
 
 namespace bson {
-namespace detail {
 
 static const char *LBRACE = "{", *RBRACE = "}", *LBRACKET = "[",
                   *RBRACKET = "]", *LPAREN = "(", *RPAREN = ")", *COLON = ":",
@@ -219,16 +218,20 @@ class BSONParser {
   //  | " CHARS "
   //  | ' CHARS '
   //
-  // Note: Only content inside quotes are stored into "result".
-  //
   Status parseQuotedString(std::string *result) {
+    Status r;
     if (advance(DOUBLEQUOTE)) {
-      return parseChars(result, nullptr, DOUBLEQUOTE);
+      result->push_back('"');
+      r = parseChars(result, nullptr, DOUBLEQUOTE);
+      if (!r)
+        result->push_back('"');
     } else if (advance(SINGLEQUOTE)) {
-      return parseChars(result, nullptr, SINGLEQUOTE);
+      result->push_back('\'');
+      r = parseChars(result, nullptr, SINGLEQUOTE);
+      if (!r)
+        result->push_back('\'');
     }
-    assert(0);
-    return Status::OK();
+    return r;
   }
 
   //
@@ -323,7 +326,12 @@ class BSONParser {
   Status parseValue(Slice field, BSONObjBuilder &builder) {
     Status ret;
 
-    if (advance(LBRACE)) {
+    if (advance("Timestamp")) {
+      // Timestamp
+      if (!(ret = parseTimestamp(field, builder))) {
+        return ret;
+      }
+    } else if (advance(LBRACE)) {
       // subobject
       if (!(ret = parseObject(field, builder))) {
         return ret;
@@ -451,6 +459,47 @@ class BSONParser {
     return Status::OK();
   }
 
+  //
+  // TIMESTAMP :
+  //   Timestamp( <32 bit unsigned integer for seconds since epoch>,
+  //         <32 bit unsigned integer for the increment> )
+  //
+  Status parseTimestamp(Slice field, BSONObjBuilder &builder) {
+    if (!advance(LPAREN))
+      return parseError("Expecting (");
+
+    char *pEnd;
+    int64_t tm[2];
+    int err_num;
+
+    for (int i = 0; i < 2; i++) {
+      if (i > 0 && !advance(COMMA))
+        return parseError("Expecting ,");
+
+      errno = 0;
+      tm[i] = strtoll(cur_, &pEnd, 10);
+      err_num = errno;
+
+      if (pEnd == nullptr)
+        return parseError(
+            "Timestamp: Invalid conversion from string to integer");
+
+      if (err_num == ERANGE || tm[i] > std::numeric_limits<int>::max())
+        return parseError("Timestamp: Value cannot fit in int32");
+
+      if (tm[i] < 0)
+        return parseError("Timestamp: Negative integer");
+
+      cur_ = pEnd;
+    }
+
+    if (!advance(RPAREN))
+      return parseError("Expecting )");
+
+    builder.AppendTimestamp(field, UnixTimestamp(tm[0], tm[1]));
+    return Status::OK();
+  }
+
   // @return FailedToParse status with the given message and some
   // additional context information.
   Status parseError(Slice msg) {
@@ -473,5 +522,4 @@ class BSONParser {
   const char *cur_;            // current position of the buffer
 };
 
-}  // namespace detail
 }  // namespace bson

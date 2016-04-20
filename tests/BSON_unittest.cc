@@ -18,10 +18,9 @@
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 
-#include "detail/BSONParser.h"
+#include "BSONParser.h"
 
 using namespace bson;
-using bson::detail::BSONParser;
 
 TEST(Parser, Empty) {
   BSONObjBuilder builder;
@@ -97,6 +96,23 @@ TEST(Parser, Embedded) {
   }
 
   BSONObj obj = builder.Obj();
-  ASSERT_EQ(obj.NumFields(), 10);
+  ASSERT_EQ(obj.NumFields(), 3);
   LOG(INFO) << "TEST Embedded: " << obj.Dump() << std::endl;
+}
+
+TEST(Parser, Special) {
+  BSONObjBuilder builder;
+  BSONParser parser(
+      "{"
+      "'1' : Timestamp(2147483647, 100)"
+      "}");
+
+  Status r = parser.Parse(builder);
+  if (!r) {
+    LOG(ERROR) << r.ToString() << std::endl;
+  }
+
+  BSONObj obj = builder.Obj();
+  ASSERT_EQ(obj.NumFields(), 1);
+  LOG(INFO) << "TEST Special: " << obj.Dump() << std::endl;
 }

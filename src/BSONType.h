@@ -50,6 +50,9 @@ enum BSONType {
   // 32-bit integers
   NumberInt = 16,
 
+  // UTC timestamp
+  Timestamp = 17,
+
   // 64-bit integers
   NumberLong = 18,
 };
@@ -84,6 +87,7 @@ inline bool IsValidBSONTypes(BSONType type) {
     case String:
     case Object:
     case Array:
+    case Timestamp:
       return true;
     default:
       return false;

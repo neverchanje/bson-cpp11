@@ -30,6 +30,7 @@ class Status {
   enum ErrorCodes { kOK = 0, kFailedToParse = 1 };
 
  public:
+  // Default Status is an OK status.
   Status() = default;
 
   // copyable
