@@ -50,7 +50,7 @@ static void AppendBSONValue(BSONObjBuilder &builder, BSONType type,
     case String:
       builder.Append("string", *boost::unsafe_any_cast<Slice>(&data));
       break;
-    case Timestamp:
+    case Datetime:
       builder.Append("timestamp",
                      *boost::unsafe_any_cast<UnixTimestamp>(&data));
       break;
@@ -73,7 +73,7 @@ TEST(Append, Simple) {
            {Boolean, true},
            {Boolean, false},
            {String, Slice("abc")},
-           {Timestamp, UnixTimestamp::Now()}};
+           {Datetime, UnixTimestamp::Now()}};
 
   for (const auto &data : a) {
     AppendBSONValue(builder, data.type, data.data);
@@ -108,7 +108,7 @@ TEST(Append, Simple) {
         ASSERT_EQ(v.ToString(), i->ValueOf<Slice>().ToString());
         break;
       }
-      case Timestamp: {
+      case Datetime: {
         auto v = *boost::unsafe_any_cast<UnixTimestamp>(&data.data);
         ASSERT_EQ(v.ToString(), i->ValueOf<UnixTimestamp>().ToString());
         break;

@@ -67,9 +67,10 @@ class BSONObjBuilder {
   //              |	"\x04" e_name document	Array
   //              |	"\x08" e_name "\x00"	Boolean "false"
   //              |	"\x08" e_name "\x01"	Boolean "true"
-  //              |	"\x0A" e_name	Null value
-  //              |	"\x10" e_name int32	32-bit integer
-  //              |	"\x12" e_name int64	64-bit integer
+  //              |	"\x09" e_name int64	    UTC datetime
+  //              |	"\x0A" e_name           Null value
+  //              |	"\x10" e_name int32	    32-bit integer
+  //              |	"\x12" e_name int64	    64-bit integer
   //  e_name	::=	cstring	Key name
   //  string	::=	int32 (byte*) "\x00"
   //  cstring	::=	(byte*) "\x00"
@@ -179,15 +180,15 @@ class BSONObjBuilder {
     return AppendArray(field, arr);
   }
 
-  BSONObjBuilder &AppendTimestamp(Slice field, const UnixTimestamp &t) {
-    appendBSONType(BSONType::Timestamp);
+  BSONObjBuilder &AppendDatetime(Slice field, const UnixTimestamp &t) {
+    appendBSONType(BSONType::Datetime);
     buf_.AppendStr(field);
     buf_.AppendNum(static_cast<int64_t>(t.MicrosSinceEpoch()));
     return *this;
   }
 
   BSONObjBuilder &Append(Slice field, const UnixTimestamp &t) {
-    return AppendTimestamp(field, t);
+    return AppendDatetime(field, t);
   }
 
  public:

@@ -313,22 +313,29 @@ class BSONParser {
   // | true
   // | false
   // | null
-  // | undefined
   //
-  // | NaN
   // | Infinity
   // | -Infinity
   //
   // | DATE
-  // | TIMESTAMP
   // | REGEX
   //
   Status parseValue(Slice field, BSONObjBuilder &builder) {
     Status ret;
 
-    if (advance("Timestamp")) {
-      // Timestamp
-      if (!(ret = parseTimestamp(field, builder))) {
+    if (advance("Datetime")) {
+      // Datetime
+      if (!(ret = parseDatetime(field, builder))) {
+        return ret;
+      }
+    } else if(advance("NumberInt")){
+      // NumberInt
+      if (!(ret = parseNumberInt(field, builder))) {
+        return ret;
+      }
+    } else if(advance("NumberLong")){
+      // NumberLong
+      if (!(ret = parseNumberLong(field, builder))) {
         return ret;
       }
     } else if (advance(LBRACE)) {
@@ -416,6 +423,10 @@ class BSONParser {
     return Status::OK();
   }
 
+  // Number:
+  // Number parsing is based on standard library functions, not
+  // necessarily on the JSON numeric grammar.
+  //
   Status parseNumber(Slice field, BSONObjBuilder &builder) {
     Status ret;
     char *pendll, *pendd;
@@ -459,44 +470,96 @@ class BSONParser {
     return Status::OK();
   }
 
-  //
-  // TIMESTAMP :
-  //   Timestamp( <32 bit unsigned integer for seconds since epoch>,
-  //         <32 bit unsigned integer for the increment> )
-  //
-  Status parseTimestamp(Slice field, BSONObjBuilder &builder) {
+  // NUMBERINT :
+  //   NumberInt( <number> )
+  Status parseNumberInt(Slice field, BSONObjBuilder& builder) {
     if (!advance(LPAREN))
       return parseError("Expecting (");
 
     char *pEnd;
-    int64_t tm[2];
+    int64_t val;
     int err_num;
 
-    for (int i = 0; i < 2; i++) {
-      if (i > 0 && !advance(COMMA))
-        return parseError("Expecting ,");
+    errno = 0;
+    val = strtoll(cur_, &pEnd, 10);
+    err_num = errno;
 
-      errno = 0;
-      tm[i] = strtoll(cur_, &pEnd, 10);
-      err_num = errno;
+    if (pEnd == nullptr)
+      return parseError("NumberInt: Invalid conversion from string to integer");
 
-      if (pEnd == nullptr)
-        return parseError(
-            "Timestamp: Invalid conversion from string to integer");
+    if (err_num == ERANGE || val > std::numeric_limits<int>::max()
+        || val < std::numeric_limits<int>::min())
+      return parseError("NumberInt: Value cannot fit in int32");
 
-      if (err_num == ERANGE || tm[i] > std::numeric_limits<int>::max())
-        return parseError("Timestamp: Value cannot fit in int32");
-
-      if (tm[i] < 0)
-        return parseError("Timestamp: Negative integer");
-
-      cur_ = pEnd;
-    }
+    cur_ = pEnd;
 
     if (!advance(RPAREN))
       return parseError("Expecting )");
 
-    builder.AppendTimestamp(field, UnixTimestamp(tm[0], tm[1]));
+    builder.AppendInt(field, val);
+    return Status::OK();
+  }
+
+  // NUMBERLONG :
+  //   NumberLong( <number> )
+  Status parseNumberLong(Slice field, BSONObjBuilder& builder) {
+    if (!advance(LPAREN))
+      return parseError("Expecting (");
+
+    char *pEnd;
+    int64_t val;
+    int err_num;
+
+    errno = 0;
+    val = strtoll(cur_, &pEnd, 10);
+    err_num = errno;
+
+    if (pEnd == nullptr)
+      return parseError("NumberLong: Invalid conversion from string to integer");
+
+    if (err_num == ERANGE)
+      return parseError("NumberLong: Value cannot fit in int64");
+
+    cur_ = pEnd;
+
+    if (!advance(RPAREN))
+      return parseError("Expecting )");
+
+    builder.AppendLong(field, val);
+    return Status::OK();
+  }
+
+  //
+  // DATETIME :
+  //   Datetime( <64 bit unsigned integer for seconds since epoch> )
+  //
+  Status parseDatetime(Slice field, BSONObjBuilder &builder) {
+    if (!advance(LPAREN))
+      return parseError("Expecting (");
+
+    char *pEnd;
+    int64_t tm;
+    int err_num;
+
+    errno = 0;
+    tm = strtoll(cur_, &pEnd, 10);
+    err_num = errno;
+
+    if (pEnd == nullptr)
+      return parseError("Datetime: Invalid conversion from string to integer");
+
+    if (err_num == ERANGE)
+      return parseError("Datetime: Value cannot fit in int64");
+
+    if (tm < 0)
+      return parseError("Datetime: Negative integer");
+
+    cur_ = pEnd;
+
+    if (!advance(RPAREN))
+      return parseError("Expecting )");
+
+    builder.AppendDatetime(field, UnixTimestamp(tm));
     return Status::OK();
   }
 

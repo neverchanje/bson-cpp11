@@ -39,7 +39,7 @@ size_t BSONElement::Size() const {
       break;
     case NumberDouble:
     case NumberLong:
-    case Timestamp:
+    case Datetime:
       valueSize = 8;
       break;
     case String:
@@ -90,7 +90,7 @@ template <> Slice BSONElement::ValueOf<Slice>() const {
 }
 
 template <> UnixTimestamp BSONElement::ValueOf<UnixTimestamp>() const {
-  checkType(Timestamp);
+  checkType(Datetime);
   return *reinterpret_cast<const UnixTimestamp *>(RawValue());
 }
 

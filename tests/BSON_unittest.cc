@@ -104,7 +104,9 @@ TEST(Parser, Special) {
   BSONObjBuilder builder;
   BSONParser parser(
       "{"
-      "'1' : Timestamp(2147483647, 100)"
+      "'1' : Datetime(9223372036854775807), "
+      "'2' : NumberInt(2147483647), "
+      "'3' : NumberLong(-9223372036854775808)"
       "}");
 
   Status r = parser.Parse(builder);
@@ -113,6 +115,6 @@ TEST(Parser, Special) {
   }
 
   BSONObj obj = builder.Obj();
-  ASSERT_EQ(obj.NumFields(), 1);
+  ASSERT_EQ(obj.NumFields(), 3);
   LOG(INFO) << "TEST Special: " << obj.Dump() << std::endl;
 }

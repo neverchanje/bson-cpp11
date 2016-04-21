@@ -41,8 +41,8 @@ const char *BSONTypesToString(BSONType t) {
       return "NumberInt";
     case NumberLong:
       return "NumberLong";
-    case Timestamp:
-      return "Timestamp";
+    case Datetime:
+      return "Datetime";
     default:
       BOOST_ASSERT_MSG(0, "Unknown type");
       return nullptr;
