@@ -26,21 +26,21 @@
 
 namespace bson {
 
-//  BSONElement represents an "element" in a BSONObj.  So for the object
+//  Element represents an "element" in a BSONObj.  So for the object
 //  { a : 3, b : "abc" }, 'a : 3' is the first element (key+value).
 //
-//  A BSONElement object points into the BSONObj's data. Thus the BSONObj
-//  must stay in scope for the life of the BSONElement.
+//  A Element object points into the BSONObj's data. Thus the BSONObj
+//  must stay in scope for the life of the Element.
 //
 //  internals:
 //  <type><fieldName'\0'><value>
 //
-class BSONElement {
+class Element {
   static const size_t SZ_Type = 1;
   static const size_t SZ_ValueStrSize = 4;
 
  public:
-  explicit BSONElement(const char *data)
+  explicit Element(const char *data)
       : fieldNameSize_(-1), elem_(data), totalSize_(0) {}
 
  public:
@@ -97,7 +97,7 @@ class BSONElement {
     return static_cast<size_t>(ConstDataView(RawValue()).ReadNum<int>());
   }
 
-  // Stores the value of this BSONElement into val.
+  // Stores the value of this Element into val.
   template <class T> T ValueOf() const {
     BOOST_ASSERT_MSG(0, "Unexpected type of value in BSON object.");
     return T();
@@ -105,7 +105,7 @@ class BSONElement {
 
  private:
   // Check whether the type of this element equals to "type".
-  inline const BSONElement &checkType(BSONType type) const;
+  inline const Element &checkType(BSONType type) const;
 
  private:
   const char *elem_;

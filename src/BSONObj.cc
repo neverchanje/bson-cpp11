@@ -23,8 +23,8 @@ namespace bson {
 
 std::string BSONObj::Dump() const {
   std::ostringstream oss;
-  for (auto i = begin(); i != end(); i++) {
-    const BSONElement &e = *i;
+  for (ConstIterator i = begin(); i != end(); i++) {
+    const Element &e = *i;
     oss << "Field: " << e.RawFieldName()
         << ", Type: " << BSONTypesToString(e.Type()) << "\n";
   }

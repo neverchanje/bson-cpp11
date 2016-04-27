@@ -66,15 +66,14 @@ extern const char *BSONTypesToString(BSONType t);
 class BSONObj;
 class BSONArray;
 
-template <class T> struct is_valid_bson_type : public std::false_type {};
-template <> struct is_valid_bson_type<double> : public std::true_type {};
-template <> struct is_valid_bson_type<int> : public std::true_type {};
-template <> struct is_valid_bson_type<long long> : public std::true_type {};
-template <> struct is_valid_bson_type<BSONObj> : public std::true_type {};
-template <> struct is_valid_bson_type<BSONArray> : public std::true_type {};
-template <> struct is_valid_bson_type<bool> : public std::true_type {};
-template <>
-struct is_valid_bson_type<std::nullptr_t> : public std::true_type {};
+template <class T> struct is_valid_type : public std::false_type {};
+template <> struct is_valid_type<double> : public std::true_type {};
+template <> struct is_valid_type<int> : public std::true_type {};
+template <> struct is_valid_type<long long> : public std::true_type {};
+template <> struct is_valid_type<BSONObj> : public std::true_type {};
+template <> struct is_valid_type<BSONArray> : public std::true_type {};
+template <> struct is_valid_type<bool> : public std::true_type {};
+template <> struct is_valid_type<std::nullptr_t> : public std::true_type {};
 
 inline bool IsValidBSONTypes(BSONType type) {
   switch (type) {

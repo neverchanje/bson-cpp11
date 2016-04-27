@@ -18,13 +18,13 @@
 #include <string>
 #include <glog/logging.h>
 
-#include "BSONElement.h"
+#include "Element.h"
 #include "Slice.h"
 #include "UnixTimestamp.h"
 
 namespace bson {
 
-size_t BSONElement::Size() const {
+size_t Element::Size() const {
   size_t valueSize = 0;
   BSONType t = Type();
   switch (t) {
@@ -56,45 +56,45 @@ size_t BSONElement::Size() const {
   return totalSize_;
 }
 
-inline const BSONElement &BSONElement::checkType(BSONType type) const {
+inline const Element &Element::checkType(BSONType type) const {
   DCHECK_EQ(type, Type())
       << "unexpected or missing of type value in BSON object: "
       << BSONTypesToString(Type());
   return *this;
 }
 
-template <> int BSONElement::ValueOf<int>() const {
+template <> int Element::ValueOf<int>() const {
   checkType(NumberInt);
   return *reinterpret_cast<const int *>(RawValue());
 }
 
-template <> long long BSONElement::ValueOf<long long>() const {
+template <> long long Element::ValueOf<long long>() const {
   checkType(NumberLong);
   return *reinterpret_cast<const long long *>(RawValue());
 }
 
-template <> double BSONElement::ValueOf<double>() const {
+template <> double Element::ValueOf<double>() const {
   checkType(NumberDouble);
   return *reinterpret_cast<const double *>(RawValue());
 }
 
-template <> bool BSONElement::ValueOf<bool>() const {
+template <> bool Element::ValueOf<bool>() const {
   checkType(Boolean);
   return *reinterpret_cast<const bool *>(RawValue());
 }
 
-template <> Slice BSONElement::ValueOf<Slice>() const {
+template <> Slice Element::ValueOf<Slice>() const {
   checkType(String);
   size_t l = ValueStrSize() - 1;
   return Slice(RawValue() + sizeof(int), l);
 }
 
-template <> UnixTimestamp BSONElement::ValueOf<UnixTimestamp>() const {
+template <> UnixTimestamp Element::ValueOf<UnixTimestamp>() const {
   checkType(Datetime);
   return *reinterpret_cast<const UnixTimestamp *>(RawValue());
 }
 
-// template <> const char* BSONElement::ValueOf<const char *>() const {
+// template <> const char* Element::ValueOf<const char *>() const {
 //  checkType(String);
 //  return (RawValue()+ sizeof(int));
 //}

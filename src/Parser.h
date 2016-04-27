@@ -36,11 +36,11 @@ static const char *LBRACE = "{", *RBRACE = "}", *LBRACKET = "[",
 
 enum { FIELD_RESERVE_SIZE = 4096, STRINGVAL_RESERVE_SIZE = 4096 };
 
-class BSONParser {
-  __DISALLOW_COPYING__(BSONParser);
+class Parser {
+  __DISALLOW_COPYING__(Parser);
 
  public:
-  BSONParser(Slice json)
+  Parser(Slice json)
       : buf_(json.RawData()),
         cur_(buf_),
         buf_end_(json.RawData() + json.Len()) {}
@@ -328,12 +328,12 @@ class BSONParser {
       if (!(ret = parseDatetime(field, builder))) {
         return ret;
       }
-    } else if(advance("NumberInt")){
+    } else if (advance("NumberInt")) {
       // NumberInt
       if (!(ret = parseNumberInt(field, builder))) {
         return ret;
       }
-    } else if(advance("NumberLong")){
+    } else if (advance("NumberLong")) {
       // NumberLong
       if (!(ret = parseNumberLong(field, builder))) {
         return ret;
@@ -472,7 +472,7 @@ class BSONParser {
 
   // NUMBERINT :
   //   NumberInt( <number> )
-  Status parseNumberInt(Slice field, BSONObjBuilder& builder) {
+  Status parseNumberInt(Slice field, BSONObjBuilder &builder) {
     if (!advance(LPAREN))
       return parseError("Expecting (");
 
@@ -487,8 +487,8 @@ class BSONParser {
     if (pEnd == nullptr)
       return parseError("NumberInt: Invalid conversion from string to integer");
 
-    if (err_num == ERANGE || val > std::numeric_limits<int>::max()
-        || val < std::numeric_limits<int>::min())
+    if (err_num == ERANGE || val > std::numeric_limits<int>::max() ||
+        val < std::numeric_limits<int>::min())
       return parseError("NumberInt: Value cannot fit in int32");
 
     cur_ = pEnd;
@@ -502,7 +502,7 @@ class BSONParser {
 
   // NUMBERLONG :
   //   NumberLong( <number> )
-  Status parseNumberLong(Slice field, BSONObjBuilder& builder) {
+  Status parseNumberLong(Slice field, BSONObjBuilder &builder) {
     if (!advance(LPAREN))
       return parseError("Expecting (");
 
@@ -515,7 +515,8 @@ class BSONParser {
     err_num = errno;
 
     if (pEnd == nullptr)
-      return parseError("NumberLong: Invalid conversion from string to integer");
+      return parseError(
+          "NumberLong: Invalid conversion from string to integer");
 
     if (err_num == ERANGE)
       return parseError("NumberLong: Value cannot fit in int64");

@@ -16,7 +16,7 @@ add_executable(BSONObjBuilder_unittest
         BSONObjBuilder_unittest.cc
         ../src/BSONObjBuilder.cc
         ../src/BufBuilder.cc
-        ../src/BSONElement.cc
+        ../src/Element.cc
         ../src/BSONType.cc
         ../src/BSONObj.cc)
 target_link_libraries(BSONObjBuilder_unittest gtest gtest_main ${SILLY_LIBRARY} ${GLOG_LIBRARY})
@@ -29,12 +29,13 @@ add_executable(BSON_unittest
         ../src/Status.cc
         ../src/BSONObj.cc
         ../src/BSONType.cc
-        ../src/BSONElement.cc
-        ../src/BSONParser.h)
+        ../src/Element.cc
+        ../src/Parser.h
+        ../src/internal/BSONObjIterator.h)
 target_link_libraries(BSON_unittest gtest gtest_main ${SILLY_LIBRARY} ${GLOG_LIBRARY})
 
 add_executable(BSONElement_unittest
         BSONElement_unittest.cc
-        ../src/BSONElement.cc
+        ../src/Element.cc
         ../src/BSONType.cc)
 target_link_libraries(BSONElement_unittest gtest gtest_main ${SILLY_LIBRARY} ${GLOG_LIBRARY})

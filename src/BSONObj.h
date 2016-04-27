@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <silly/IteratorFacade.h>
-
-#include "BSONElement.h"
+#include <unordered_map>
+#include "Element.h"
 #include "Slice.h"
+#include "internal/BSONObjIterator.h"
 
 namespace bson {
 
@@ -33,6 +33,8 @@ class BSONObj {
   static const size_t SZ_TotalSize = 4;
   static const size_t SZ_EOO = 1;
 
+  template <bool IsConst> friend class internal::BSONObjIterator;
+
  public:
   BSONObj(const char *bson_data)
       : data_(bson_data),
@@ -44,66 +46,42 @@ class BSONObj {
   std::string Dump() const;
 
  public:
-  class Iterator : public silly::IteratorFacade<Iterator, BSONElement const,
-                                                silly::ForwardIteratorTag> {
-    friend class BSONObj;
-
-   public:
-    Iterator(const Iterator &other) : pos_(other.pos_), obj_(other.obj_) {}
-
-    const Iterator &operator=(const Iterator &other) {
-      pos_ = other.pos_;
-      obj_ = other.obj_;
-      return *this;
-    }
-
-   private:
-    // BSONObj::Iterator can only be constructed inside BSONObj.
-    Iterator(const char *data, const BSONObj &obj) : pos_(data), obj_(&obj) {}
-
-    //
-    // The following functions are required for using silly::IteratorFacade.
-    //
-    friend class silly::IteratorCoreAccess;
-
-    // Lazy dereference.
-    const BSONElement &dereference() const {
-      if (!e_ || e_->RawData() != pos_)
-        e_.reset(new BSONElement(pos_));
-      return *e_;
-    }
-
-    void increment() {
-      assert(pos_ < obj_->end_);
-      pos_ += BSONElement(pos_).Size();
-    }
-
-    bool equal(const Iterator &other) const {
-      return pos_ == other.pos_;
-    }
-
-   private:
-    const char *pos_;
-    const BSONObj *obj_;
-    mutable std::unique_ptr<BSONElement> e_;
-  };
-
   //
   // "begin" and "end" function in stdlib-style, so that we're able to use the
   // syntactic sugar of range-based loop.
   //
 
-  Iterator begin() const {
+  typedef internal::BSONObjIterator<true> ConstIterator;
+  typedef internal::BSONObjIterator<false> Iterator;
+
+  Iterator begin() {
     return Iterator(data_ + SZ_TotalSize, *this);
   }
 
-  Iterator end() const {
+  ConstIterator begin() const {
+    return ConstIterator(data_ + SZ_TotalSize, *this);
+  }
+
+  Iterator end() {
     return Iterator(end_, *this);
   }
 
+  ConstIterator end() const {
+    return ConstIterator(end_, *this);
+  }
+
   // Search the bson object for an element of the specified field name, if found
-  // it returns an iterator, otherwise it returns an iterator to BSONObj::End().
-  Iterator find(Slice field) const {
+  // it returns an iterator, otherwise it returns an iterator to BSONObj::end().
+  Iterator find(Slice field) {
+    for (auto it = begin(); it != end(); it++) {
+      if (strcmp(field.RawData(), it->RawFieldName()) == 0) {
+        return it;
+      }
+    }
+    return end();
+  }
+
+  ConstIterator find(Slice field) const {
     for (auto it = begin(); it != end(); it++) {
       if (strcmp(field.RawData(), it->RawFieldName()) == 0) {
         return it;
@@ -129,6 +107,14 @@ class BSONObj {
     for (auto it = begin(); it != end(); it++)
       ret++;
     return ret;
+  }
+
+  bool HasMember(Slice field) const {
+    return find(field) != end();
+  }
+
+  Element &operator[](Slice field) {
+    return *find(field);
   }
 
   // @return total size of the BSON object in bytes.

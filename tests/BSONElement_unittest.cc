@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include "BSONElement.h"
+#include "Element.h"
 
 using namespace bson;
 

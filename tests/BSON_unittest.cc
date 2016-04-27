@@ -18,13 +18,13 @@
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 
-#include "BSONParser.h"
+#include "Parser.h"
 
 using namespace bson;
 
 TEST(Parser, Empty) {
   BSONObjBuilder builder;
-  BSONParser parser("{}");
+  Parser parser("{}");
 
   Status r = parser.Parse(builder);
   if (!r) {
@@ -34,12 +34,14 @@ TEST(Parser, Empty) {
   ASSERT_TRUE(builder.HasDone());
   BSONObj obj = builder.Obj();
   ASSERT_EQ(obj.NumFields(), 0);
+  ASSERT_TRUE(obj.begin() == obj.end());
+
   LOG(INFO) << "TEST Empty: " << obj.Dump() << std::endl;
 }
 
 TEST(Parser, Basic) {
   BSONObjBuilder builder;
-  BSONParser parser(
+  Parser parser(
       "{"
       "'1' : 2147483647, "
       "'2' : -2147483648, "
@@ -60,13 +62,12 @@ TEST(Parser, Basic) {
 
   BSONObj obj = builder.Obj();
   ASSERT_EQ(obj.NumFields(), 10);
-
-  //  LOG(INFO) << "TEST Basic: " << obj.Dump() << std::endl;
+  LOG(INFO) << "TEST Basic: " << obj.Dump() << std::endl;
 }
 
 TEST(Parser, Embedded) {
   BSONObjBuilder builder;
-  BSONParser parser(
+  Parser parser(
       "["
       "{"
       "'1' : 2147483647, "
@@ -102,7 +103,7 @@ TEST(Parser, Embedded) {
 
 TEST(Parser, Special) {
   BSONObjBuilder builder;
-  BSONParser parser(
+  Parser parser(
       "{"
       "'1' : Datetime(9223372036854775807), "
       "'2' : NumberInt(2147483647), "

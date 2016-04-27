@@ -16,13 +16,13 @@
  */
 
 #include "BSON.h"
-#include "BSONParser.h"
+#include "Parser.h"
 
 namespace bson {
 
 BSONObj FromJSON(Slice json) {
   BSONObjBuilder builder;
-  BSONParser parser(json);
+  Parser parser(json);
 
   Status s;
   if (!(s = parser.Parse(builder))) {
