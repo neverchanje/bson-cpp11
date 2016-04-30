@@ -17,11 +17,11 @@
 
 #include <boost/assert.hpp>
 
-#include "BSONType.h"
+#include "Type.h"
 
 namespace bson {
 
-const char *BSONTypesToString(BSONType t) {
+const char *TypeToString(Type_t t) {
   switch (t) {
     case EOO:
       return "EOO";

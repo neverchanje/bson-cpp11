@@ -26,7 +26,7 @@ namespace bson {
 
 size_t Element::Size() const {
   size_t valueSize = 0;
-  BSONType t = Type();
+  Type_t t = Type();
   switch (t) {
     case EOO:
     case Null:
@@ -50,16 +50,16 @@ size_t Element::Size() const {
       valueSize = ValueObjSize();
       break;
     default:
-      BOOST_ASSERT(IsValidBSONTypes(t));
+      BOOST_ASSERT(IsValidType(t));
   }
   totalSize_ = SZ_Type + valueSize + FieldNameSize();
   return totalSize_;
 }
 
-inline const Element &Element::checkType(BSONType type) const {
+inline const Element &Element::checkType(Type_t type) const {
   DCHECK_EQ(type, Type())
       << "unexpected or missing of type value in BSON object: "
-      << BSONTypesToString(Type());
+      << TypeToString(Type());
   return *this;
 }
 

@@ -32,7 +32,7 @@ TEST(Basic, EmptyObject) {
   ASSERT_EQ(obj.TotalSize(), 5);  // totalSize + EOO
 }
 
-static void AppendBSONValue(BSONObjBuilder &builder, BSONType type,
+static void AppendBSONValue(BSONObjBuilder &builder, Type_t type,
                             const boost::any &data) {
   switch (type) {
     case NumberInt:
@@ -62,7 +62,7 @@ static void AppendBSONValue(BSONObjBuilder &builder, BSONType type,
 TEST(Append, Simple) {
   BSONObjBuilder builder;
   struct S {
-    BSONType type;
+    Type_t type;
     boost::any data;
   } a[] = {{NumberInt, std::numeric_limits<int>::max()},
            {NumberInt, std::numeric_limits<int>::min()},
@@ -114,7 +114,7 @@ TEST(Append, Simple) {
         break;
       }
       default:
-        DCHECK(IsValidBSONTypes(data.type)) << ": " << data.type;
+        DCHECK(IsValidType(data.type)) << ": " << data.type;
         break;
     }
     i++;

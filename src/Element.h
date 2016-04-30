@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <boost/assert.hpp>
 
-#include "BSONType.h"
+#include "Type.h"
 #include "DataView.h"
 
 namespace bson {
@@ -51,16 +51,16 @@ class Element {
   // Total size of the element.
   size_t Size() const;
 
-  BSONType Type() const {
+  Type_t Type() const {
     char ret = ConstDataView(elem_).ReadNum<char>();
-    return static_cast<BSONType>(ret);
+    return static_cast<Type_t>(ret);
   }
 
   // Field name of the element.  e.g., for
   // name : "Joe"
   // "name" is the fieldname
   const char *RawFieldName() const {
-    if (Type() == BSONType::EOO) {
+    if (Type() == Type_t::EOO) {
       return "";
     }
     return elem_ + sizeof(char);
@@ -84,14 +84,14 @@ class Element {
     return static_cast<size_t>(fieldNameSize_);
   }
 
-  // Must assure that the type of this element is BSONType::String first.
+  // Must assure that the type of this element is Type_t::String first.
   // @return String size including terminating null
   size_t ValueStrSize() const {
     return static_cast<size_t>(ConstDataView(RawValue()).ReadNum<int>());
   }
 
-  // Must assure that the type of this element is BSONType::Object or
-  // BSONType::Array first.
+  // Must assure that the type of this element is Type_t::Object or
+  // Type_t::Array first.
   // @return embedded object size including the size itself
   size_t ValueObjSize() const {
     return static_cast<size_t>(ConstDataView(RawValue()).ReadNum<int>());
@@ -105,7 +105,7 @@ class Element {
 
  private:
   // Check whether the type of this element equals to "type".
-  inline const Element &checkType(BSONType type) const;
+  inline const Element &checkType(Type_t type) const;
 
  private:
   const char *elem_;

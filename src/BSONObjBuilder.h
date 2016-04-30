@@ -77,7 +77,7 @@ class BSONObjBuilder {
   //
 
   BSONObjBuilder &AppendNull(Slice field, std::nullptr_t val = nullptr) {
-    appendBSONType(BSONType::Null);
+    appendBSONType(Type_t::Null);
     buf_.AppendStr(field);
     return *this;
   }
@@ -87,7 +87,7 @@ class BSONObjBuilder {
   }
 
   BSONObjBuilder &AppendBool(Slice field, bool val) {
-    appendBSONType(BSONType::Boolean);
+    appendBSONType(Type_t::Boolean);
     buf_.AppendStr(field);
     buf_.AppendNum(static_cast<char>(val ? 1 : 0));
     return *this;
@@ -98,7 +98,7 @@ class BSONObjBuilder {
   }
 
   BSONObjBuilder &AppendDouble(Slice field, double val) {
-    appendBSONType(BSONType::NumberDouble);
+    appendBSONType(Type_t::NumberDouble);
     buf_.AppendStr(field);
     buf_.AppendNum(val);
     return *this;
@@ -109,7 +109,7 @@ class BSONObjBuilder {
   }
 
   BSONObjBuilder &AppendLong(Slice field, long long val) {
-    appendBSONType(BSONType::NumberLong);
+    appendBSONType(Type_t::NumberLong);
     buf_.AppendStr(field);
     buf_.AppendNum(val);
     return *this;
@@ -120,7 +120,7 @@ class BSONObjBuilder {
   }
 
   BSONObjBuilder &AppendInt(Slice field, int val) {
-    appendBSONType(BSONType::NumberInt);
+    appendBSONType(Type_t::NumberInt);
     buf_.AppendStr(field);
     buf_.AppendNum(val);
     return *this;
@@ -132,7 +132,7 @@ class BSONObjBuilder {
 
   // Append a string element including NULL terminator.
   BSONObjBuilder &AppendStr(Slice field, Slice str) {
-    appendBSONType(BSONType::String);
+    appendBSONType(Type_t::String);
     buf_.AppendStr(field);
     buf_.AppendNum(static_cast<int>(str.Len() + 1));
     buf_.AppendStr(str);
@@ -145,21 +145,21 @@ class BSONObjBuilder {
 
   // Add header for a new subobject.
   BSONObjBuilder &AppendSubObjectHeader(Slice field) {
-    appendBSONType(BSONType::Object);
+    appendBSONType(Type_t::Object);
     buf_.AppendStr(field);
     return *this;
   }
 
   // Add header for a new subarray.
   BSONObjBuilder &AppendSubArrayHeader(Slice field) {
-    appendBSONType(BSONType::Array);
+    appendBSONType(Type_t::Array);
     buf_.AppendStr(field);
     return *this;
   }
 
   // Append a embedded object.
   BSONObjBuilder &AppendObject(Slice field, const BSONObj &obj) {
-    appendBSONType(BSONType::Object);
+    appendBSONType(Type_t::Object);
     buf_.AppendStr(field);
     buf_.AppendBuf(obj.RawData(), obj.TotalSize());
     return *this;
@@ -170,7 +170,7 @@ class BSONObjBuilder {
   }
 
   BSONObjBuilder &AppendArray(Slice field, const BSONArray &arr) {
-    appendBSONType(BSONType::Array);
+    appendBSONType(Type_t::Array);
     buf_.AppendStr(field);
     buf_.AppendBuf(arr.RawData(), arr.TotalSize());
     return *this;
@@ -181,7 +181,7 @@ class BSONObjBuilder {
   }
 
   BSONObjBuilder &AppendDatetime(Slice field, const UnixTimestamp &t) {
-    appendBSONType(BSONType::Datetime);
+    appendBSONType(Type_t::Datetime);
     buf_.AppendStr(field);
     buf_.AppendNum(static_cast<int64_t>(t.MicrosSinceEpoch()));
     return *this;
@@ -207,7 +207,7 @@ class BSONObjBuilder {
   void DoneFast() {
     if (!doneCalled_) {
       doneCalled_ = true;
-      appendBSONType(BSONType::EOO);
+      appendBSONType(Type_t::EOO);
       buf_.ClaimReservedBytes(1);
 
       // set "totalSize" field of the bson object
@@ -228,7 +228,7 @@ class BSONObjBuilder {
   }
 
  private:
-  inline void appendBSONType(BSONType type) {
+  inline void appendBSONType(Type_t type) {
     buf_.AppendNum(static_cast<char>(type));
   }
 

@@ -26,7 +26,7 @@ namespace bson {
  * http://bsonspec.org/spec.html.
  * By now only a subset of them are implemented.
  */
-enum BSONType {
+enum Type_t {
 
   // End of object
   EOO = 0,
@@ -57,7 +57,7 @@ enum BSONType {
   NumberLong = 18,
 };
 
-extern const char *BSONTypesToString(BSONType t);
+extern const char *TypeToString(Type_t t);
 
 //
 // Type traits
@@ -75,7 +75,7 @@ template <> struct is_valid_type<BSONArray> : public std::true_type {};
 template <> struct is_valid_type<bool> : public std::true_type {};
 template <> struct is_valid_type<std::nullptr_t> : public std::true_type {};
 
-inline bool IsValidBSONTypes(BSONType type) {
+inline bool IsValidType(Type_t type) {
   switch (type) {
     case EOO:
     case NumberInt:
