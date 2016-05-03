@@ -28,19 +28,62 @@
 
 using namespace bson;
 
-static void BM_MY_BSON(benchmark::State &state) {
+std::string json_files[6] = {
+    "../../data/canada.json",  "../../data/mock.json",
+    "../../data/type.json",    "../../data/allOf.json",
+    "../../data/default.json", "../../data/anyOf.json",
+};
+
+uint64_t bytesCount = 0, totalTime = 0;
+
+static void BM_MyBSON(benchmark::State& state) {
   typedef std::istreambuf_iterator<char> iterator_t;
 
-  std::ifstream ifs("../../data/canada.json");
+  std::ifstream ifs(json_files[state.range_x()]);
   std::string json(iterator_t(ifs), (iterator_t()));
+
+  auto t1 = std::chrono::high_resolution_clock::now();
 
   while (state.KeepRunning()) {
     Object obj = FromJSON(json);
     assert(obj.begin() != obj.end());
-    //  LOG(INFO) << obj.Dump();
   }
+
+  auto t2 = std::chrono::high_resolution_clock::now();
+
+  bytesCount += state.iterations() * json.length();
+  totalTime += t2.time_since_epoch().count() - t1.time_since_epoch().count();
 }
 
-BENCHMARK(BM_MY_BSON);
+uint64_t bytesCount2 = 0, totalTime2 = 0;
 
-BENCHMARK_MAIN();
+static void BM_Strlen(benchmark::State& state) {
+  typedef std::istreambuf_iterator<char> iterator_t;
+
+  std::ifstream ifs(json_files[state.range_x()]);
+  std::string json(iterator_t(ifs), (iterator_t()));
+
+  auto t1 = std::chrono::high_resolution_clock::now();
+
+  while (state.KeepRunning()) {
+    strlen(json.data());
+  }
+
+  auto t2 = std::chrono::high_resolution_clock::now();
+
+  bytesCount2 += state.iterations() * json.length();
+  totalTime2 += t2.time_since_epoch().count() - t1.time_since_epoch().count();
+}
+
+BENCHMARK(BM_MyBSON)->Arg(0)->Arg(1)->Arg(2)->Arg(3)->Arg(4)->Arg(5);
+BENCHMARK(BM_Strlen)->Arg(0)->Arg(1)->Arg(2)->Arg(3)->Arg(4)->Arg(5);
+
+int main(int argc, const char** argv) {
+  ::benchmark::Initialize(&argc, argv);
+  ::benchmark::RunSpecifiedBenchmarks();
+  fprintf(stderr, "The parsing rate is at %lf kb/s\n",
+          (double)(bytesCount / 1000) / (totalTime / 1000000000));
+
+  fprintf(stderr, "The strlen rate is at %lf kb/s\n",
+          (double)(bytesCount2 / 1000) / (totalTime2 / 1000000000));
+}
