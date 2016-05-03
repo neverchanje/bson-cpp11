@@ -28,25 +28,25 @@ size_t Element::Size() const {
   size_t valueSize = 0;
   Type_t t = Type();
   switch (t) {
-    case EOO:
-    case Null:
+    case kEOO:
+    case kNull:
       break;
-    case Boolean:
+    case kBoolean:
       valueSize = 1;
       break;
-    case NumberInt:
+    case kNumberInt:
       valueSize = 4;
       break;
-    case NumberDouble:
-    case NumberLong:
-    case Datetime:
+    case kNumberDouble:
+    case kNumberLong:
+    case kDatetime:
       valueSize = 8;
       break;
-    case String:
+    case kString:
       valueSize = ValueStrSize() + SZ_ValueStrSize;
       break;
-    case Object:
-    case Array:
+    case kObject:
+    case kArray:
       valueSize = ValueObjSize();
       break;
     default:
@@ -64,38 +64,38 @@ inline const Element &Element::checkType(Type_t type) const {
 }
 
 template <> int Element::ValueOf<int>() const {
-  checkType(NumberInt);
+  checkType(kNumberInt);
   return *reinterpret_cast<const int *>(RawValue());
 }
 
 template <> long long Element::ValueOf<long long>() const {
-  checkType(NumberLong);
+  checkType(kNumberLong);
   return *reinterpret_cast<const long long *>(RawValue());
 }
 
 template <> double Element::ValueOf<double>() const {
-  checkType(NumberDouble);
+  checkType(kNumberDouble);
   return *reinterpret_cast<const double *>(RawValue());
 }
 
 template <> bool Element::ValueOf<bool>() const {
-  checkType(Boolean);
+  checkType(kBoolean);
   return *reinterpret_cast<const bool *>(RawValue());
 }
 
 template <> Slice Element::ValueOf<Slice>() const {
-  checkType(String);
+  checkType(kString);
   size_t l = ValueStrSize() - 1;
   return Slice(RawValue() + sizeof(int), l);
 }
 
 template <> UnixTimestamp Element::ValueOf<UnixTimestamp>() const {
-  checkType(Datetime);
+  checkType(kDatetime);
   return *reinterpret_cast<const UnixTimestamp *>(RawValue());
 }
 
 // template <> const char* Element::ValueOf<const char *>() const {
-//  checkType(String);
+//  checkType(kString);
 //  return (RawValue()+ sizeof(int));
 //}
 

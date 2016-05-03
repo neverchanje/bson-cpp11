@@ -18,9 +18,10 @@
 #pragma once
 
 #include <silly/IteratorFacade.h>
+#include <Object.h>
 
 #include "Element.h"
-#include "BSONObj.h"
+#include "Object.h"
 
 namespace bson {
 
@@ -30,20 +31,20 @@ using silly::IteratorFacade;
 using silly::ForwardIteratorTag;
 
 template <bool IsConst = true>
-class BSONObjIterator : public IteratorFacade<BSONObjIterator<IsConst>, Element,
+class ObjectIterator : public IteratorFacade<ObjectIterator<IsConst>, Element,
                                               ForwardIteratorTag, IsConst> {
-  typedef IteratorFacade<BSONObjIterator<IsConst>, Element, ForwardIteratorTag,
+  typedef IteratorFacade<ObjectIterator<IsConst>, Element, ForwardIteratorTag,
                          IsConst> Facade;
   typedef typename Facade::Reference Reference;
 
  public:
-  BSONObjIterator(const char *data, const BSONObj &obj)
+  ObjectIterator(const char *data, const Object &obj)
       : pos_(data), obj_(&obj) {}
 
-  BSONObjIterator(const BSONObjIterator &other)
+  ObjectIterator(const ObjectIterator &other)
       : pos_(other.pos_), obj_(other.obj_) {}
 
-  BSONObjIterator &operator=(const BSONObjIterator &other) {
+  ObjectIterator &operator=(const ObjectIterator &other) {
     pos_ = other.pos_;
     obj_ = other.obj_;
     return *this;
@@ -67,13 +68,13 @@ class BSONObjIterator : public IteratorFacade<BSONObjIterator<IsConst>, Element,
     pos_ += Element(pos_).Size();
   }
 
-  bool equal(const BSONObjIterator &other) const {
+  bool equal(const ObjectIterator &other) const {
     return pos_ == other.pos_;
   }
 
  private:
   const char *pos_;
-  const BSONObj *obj_;
+  const Object *obj_;
   mutable std::unique_ptr<Element> e_;
 };
 

@@ -31,11 +31,11 @@ using namespace bson;
 static void BM_MY_BSON(benchmark::State &state) {
   typedef std::istreambuf_iterator<char> iterator_t;
 
-  while (state.KeepRunning()) {
-    std::ifstream ifs("../../data/canada.json");
-    std::string json(iterator_t(ifs), (iterator_t()));
+  std::ifstream ifs("../../data/canada.json");
+  std::string json(iterator_t(ifs), (iterator_t()));
 
-    BSONObj obj = FromJSON(json);
+  while (state.KeepRunning()) {
+    Object obj = FromJSON(json);
     assert(obj.begin() != obj.end());
     //  LOG(INFO) << obj.Dump();
   }

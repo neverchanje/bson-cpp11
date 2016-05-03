@@ -29,32 +29,32 @@ namespace bson {
 enum Type_t {
 
   // End of object
-  EOO = 0,
+  kEOO = 0,
 
   // double precision floating point value
-  NumberDouble = 1,
+  kNumberDouble = 1,
 
-  String = 2,
+  kString = 2,
 
   // an embedded object
-  Object = 3,
+  kObject = 3,
 
   // an embedded array
-  Array = 4,
+  kArray = 4,
 
   // boolean type
-  Boolean = 8,
+  kBoolean = 8,
 
-  Null = 10,
+  kNull = 10,
 
   // 32-bit integers
-  NumberInt = 16,
+  kNumberInt = 16,
 
   // UTC datetime
-  Datetime = 17,
+  kDatetime = 17,
 
   // 64-bit integers
-  NumberLong = 18,
+  kNumberLong = 18,
 };
 
 extern const char *TypeToString(Type_t t);
@@ -63,30 +63,30 @@ extern const char *TypeToString(Type_t t);
 // Type traits
 //
 
-class BSONObj;
-class BSONArray;
+class Object;
+class Array;
 
 template <class T> struct is_valid_type : public std::false_type {};
 template <> struct is_valid_type<double> : public std::true_type {};
 template <> struct is_valid_type<int> : public std::true_type {};
 template <> struct is_valid_type<long long> : public std::true_type {};
-template <> struct is_valid_type<BSONObj> : public std::true_type {};
-template <> struct is_valid_type<BSONArray> : public std::true_type {};
+template <> struct is_valid_type<Object> : public std::true_type {};
+template <> struct is_valid_type<Array> : public std::true_type {};
 template <> struct is_valid_type<bool> : public std::true_type {};
 template <> struct is_valid_type<std::nullptr_t> : public std::true_type {};
 
 inline bool IsValidType(Type_t type) {
   switch (type) {
-    case EOO:
-    case NumberInt:
-    case NumberLong:
-    case NumberDouble:
-    case Null:
-    case Boolean:
-    case String:
-    case Object:
-    case Array:
-    case Datetime:
+    case kEOO:
+    case kNumberInt:
+    case kNumberLong:
+    case kNumberDouble:
+    case kNull:
+    case kBoolean:
+    case kString:
+    case kObject:
+    case kArray:
+    case kDatetime:
       return true;
     default:
       return false;

@@ -46,7 +46,7 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 ### C++ template
-# Compiled Object files
+# Compiled kObject files
 *.slo
 *.lo
 *.o
@@ -82,7 +82,7 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 ### C template
-# Object files
+# kObject files
 *.o
 *.ko
 *.obj

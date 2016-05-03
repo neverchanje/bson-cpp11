@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "BSONObj.h"
+#include "Object.h"
 #include "Slice.h"
 #include "DisallowCopying.h"
 #include "BufBuilder.h"
@@ -37,11 +37,11 @@ using silly::UnixTimestamp;
 
 namespace bson {
 
-class BSONObjBuilder {
-  __DISALLOW_COPYING__(BSONObjBuilder);
+class ObjectBuilder {
+  __DISALLOW_COPYING__(ObjectBuilder);
 
  public:
-  BSONObjBuilder() : doneCalled_(false) {
+  ObjectBuilder() : doneCalled_(false) {
     // Leave room for 4 bytes "totalSize".
     buf_.Skip(sizeof(int));
 
@@ -76,125 +76,125 @@ class BSONObjBuilder {
   //  cstring	::=	(byte*) "\x00"
   //
 
-  BSONObjBuilder &AppendNull(Slice field, std::nullptr_t val = nullptr) {
-    appendBSONType(Type_t::Null);
+  ObjectBuilder &AppendNull(Slice field, std::nullptr_t val = nullptr) {
+    appendBSONType(Type_t::kNull);
     buf_.AppendStr(field);
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, std::nullptr_t val = nullptr) {
+  ObjectBuilder &Append(Slice field, std::nullptr_t val = nullptr) {
     return AppendNull(field, val);
   }
 
-  BSONObjBuilder &AppendBool(Slice field, bool val) {
-    appendBSONType(Type_t::Boolean);
+  ObjectBuilder &AppendBool(Slice field, bool val) {
+    appendBSONType(Type_t::kBoolean);
     buf_.AppendStr(field);
     buf_.AppendNum(static_cast<char>(val ? 1 : 0));
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, bool val) {
+  ObjectBuilder &Append(Slice field, bool val) {
     return AppendBool(field, val);
   }
 
-  BSONObjBuilder &AppendDouble(Slice field, double val) {
-    appendBSONType(Type_t::NumberDouble);
+  ObjectBuilder &AppendDouble(Slice field, double val) {
+    appendBSONType(Type_t::kNumberDouble);
     buf_.AppendStr(field);
     buf_.AppendNum(val);
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, double val) {
+  ObjectBuilder &Append(Slice field, double val) {
     return AppendDouble(field, val);
   }
 
-  BSONObjBuilder &AppendLong(Slice field, long long val) {
-    appendBSONType(Type_t::NumberLong);
+  ObjectBuilder &AppendLong(Slice field, long long val) {
+    appendBSONType(Type_t::kNumberLong);
     buf_.AppendStr(field);
     buf_.AppendNum(val);
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, long long val) {
+  ObjectBuilder &Append(Slice field, long long val) {
     return AppendLong(field, val);
   }
 
-  BSONObjBuilder &AppendInt(Slice field, int val) {
-    appendBSONType(Type_t::NumberInt);
+  ObjectBuilder &AppendInt(Slice field, int val) {
+    appendBSONType(Type_t::kNumberInt);
     buf_.AppendStr(field);
     buf_.AppendNum(val);
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, int val) {
+  ObjectBuilder &Append(Slice field, int val) {
     return AppendInt(field, val);
   }
 
   // Append a string element including NULL terminator.
-  BSONObjBuilder &AppendStr(Slice field, Slice str) {
-    appendBSONType(Type_t::String);
+  ObjectBuilder &AppendStr(Slice field, Slice str) {
+    appendBSONType(Type_t::kString);
     buf_.AppendStr(field);
     buf_.AppendNum(static_cast<int>(str.Len() + 1));
     buf_.AppendStr(str);
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, Slice str) {
+  ObjectBuilder &Append(Slice field, Slice str) {
     return AppendStr(field, str);
   }
 
   // Add header for a new subobject.
-  BSONObjBuilder &AppendSubObjectHeader(Slice field) {
-    appendBSONType(Type_t::Object);
+  ObjectBuilder &AppendSubObjectHeader(Slice field) {
+    appendBSONType(Type_t::kObject);
     buf_.AppendStr(field);
     return *this;
   }
 
   // Add header for a new subarray.
-  BSONObjBuilder &AppendSubArrayHeader(Slice field) {
-    appendBSONType(Type_t::Array);
+  ObjectBuilder &AppendSubArrayHeader(Slice field) {
+    appendBSONType(Type_t::kArray);
     buf_.AppendStr(field);
     return *this;
   }
 
   // Append a embedded object.
-  BSONObjBuilder &AppendObject(Slice field, const BSONObj &obj) {
-    appendBSONType(Type_t::Object);
+  ObjectBuilder &AppendObject(Slice field, const Object &obj) {
+    appendBSONType(Type_t::kObject);
     buf_.AppendStr(field);
     buf_.AppendBuf(obj.RawData(), obj.TotalSize());
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, const BSONObj &obj) {
+  ObjectBuilder &Append(Slice field, const Object &obj) {
     return AppendObject(field, obj);
   }
 
-  BSONObjBuilder &AppendArray(Slice field, const BSONArray &arr) {
-    appendBSONType(Type_t::Array);
+  ObjectBuilder &AppendArray(Slice field, const Array &arr) {
+    appendBSONType(Type_t::kArray);
     buf_.AppendStr(field);
     buf_.AppendBuf(arr.RawData(), arr.TotalSize());
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, const BSONArray &arr) {
+  ObjectBuilder &Append(Slice field, const Array &arr) {
     return AppendArray(field, arr);
   }
 
-  BSONObjBuilder &AppendDatetime(Slice field, const UnixTimestamp &t) {
-    appendBSONType(Type_t::Datetime);
+  ObjectBuilder &AppendDatetime(Slice field, const UnixTimestamp &t) {
+    appendBSONType(Type_t::kDatetime);
     buf_.AppendStr(field);
     buf_.AppendNum(static_cast<int64_t>(t.MicrosSinceEpoch()));
     return *this;
   }
 
-  BSONObjBuilder &Append(Slice field, const UnixTimestamp &t) {
+  ObjectBuilder &Append(Slice field, const UnixTimestamp &t) {
     return AppendDatetime(field, t);
   }
 
  public:
   // Finish building.
-  // @return BSONObj constructed by this BSONObjBuilder.
-  BSONObj Done() {
+  // @return Object constructed by this ObjectBuilder.
+  Object Done() {
     DoneFast();
     return Obj();  // RVO
   }
@@ -207,7 +207,7 @@ class BSONObjBuilder {
   void DoneFast() {
     if (!doneCalled_) {
       doneCalled_ = true;
-      appendBSONType(Type_t::EOO);
+      appendBSONType(Type_t::kEOO);
       buf_.ClaimReservedBytes(1);
 
       // set "totalSize" field of the bson object
@@ -215,14 +215,14 @@ class BSONObjBuilder {
     }
   }
 
-  // @return BSONObj constructed by this BSONObjBuilder.
-  BSONObj Obj() {
+  // @return Object constructed by this ObjectBuilder.
+  Object Obj() {
     BOOST_ASSERT_MSG(doneCalled_, "Building of this object hasn't done yet.");
     if (sbuf_.get() == nullptr) {
       sbuf_.reset(buf_.Release());
     }
     assert(sbuf_.get() != nullptr);
-    return BSONObj(sbuf_);
+    return Object(sbuf_);
   }
 
  public:

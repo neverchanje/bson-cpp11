@@ -13,27 +13,27 @@ add_executable(BufBuilder_unittest
 target_link_libraries(BufBuilder_unittest gtest gtest_main ${SILLY_LIBRARY})
 
 add_executable(BSONObjBuilder_unittest
-        BSONObjBuilder_unittest.cc
-        ../src/BSONObjBuilder.cc
+        ObjectBuilder_unittest.cc
+        ../src/ObjectBuilder.cc
         ../src/BufBuilder.cc
         ../src/Element.cc
         ../src/Type.cc
-        ../src/BSONObj.cc)
+        ../src/Object.cc)
 target_link_libraries(BSONObjBuilder_unittest gtest gtest_main ${SILLY_LIBRARY} ${GLOG_LIBRARY})
 
 add_executable(BSON_unittest
         BSON_unittest.cc
         ../src/BSON.cc
-        ../src/BSONObjBuilder.cc
+        ../src/ObjectBuilder.cc
         ../src/BufBuilder.cc
         ../src/Status.cc
-        ../src/BSONObj.cc
+        ../src/Object.cc
         ../src/Type.cc
         ../src/Element.cc)
 target_link_libraries(BSON_unittest gtest gtest_main ${SILLY_LIBRARY} ${GLOG_LIBRARY})
 
 add_executable(BSONElement_unittest
-        BSONElement_unittest.cc
+        Element_unittest.cc
         ../src/Element.cc
         ../src/Type.cc)
 target_link_libraries(BSONElement_unittest gtest gtest_main ${SILLY_LIBRARY} ${GLOG_LIBRARY})
@@ -41,12 +41,14 @@ target_link_libraries(BSONElement_unittest gtest gtest_main ${SILLY_LIBRARY} ${G
 add_executable(BSON_perftest
         BSON_perftest.cc
         ../src/BSON.cc
-        ../src/BSONObjBuilder.cc
+        ../src/ObjectBuilder.cc
         ../src/BufBuilder.cc
         ../src/Status.cc
-        ../src/BSONObj.cc
+        ../src/Object.cc
         ../src/Type.cc
-        ../src/Element.cc)
+        ../src/Element.cc
+        ../src/internal/ObjectIterator.h
+        ../src/Parser.h)
 target_link_libraries(BSON_perftest ${BENCHMARK_LIBRARY} ${GLOG_LIBRARY} ${SILLY_LIBRARY})
 
 #add_executable(SharedBuffer_unittest

@@ -17,31 +17,29 @@
 
 #pragma once
 
-#include <unordered_map>
-
 #include "Element.h"
 #include "Slice.h"
-#include "internal/BSONObjIterator.h"
+#include "internal/ObjectIterator.h"
 
 namespace bson {
 
-// A BSON object is an unordered set of name/value pairs. @see BSONObjBuilder.h
+// A BSON object is an unordered set of name/value pairs. @see ObjectBuilder.h
 // for the format of BSON object.
-// BSONObj represents a block of binary data constructed from BSONObjBuilder.
+// Object represents a block of binary data constructed from ObjectBuilder.
 // The lifetime of the internal binary data is managed by reference counting, if
-// no instance of BSONObj or BSONBuilder holds the data, it will be freed.
+// no instance of Object or BSONBuilder holds the data, it will be freed.
 //
 
 typedef std::shared_ptr<const char> SharedBuffer;
 
-class BSONObj {
+class Object {
   static const size_t SZ_TotalSize = 4;
   static const size_t SZ_EOO = 1;
 
-  template <bool IsConst> friend class internal::BSONObjIterator;
+  template <bool IsConst> friend class internal::ObjectIterator;
 
  public:
-  BSONObj(const SharedBuffer &sharedBuf)
+  Object(const SharedBuffer &sharedBuf)
       : sbuf_(sharedBuf), data_(sharedBuf.get()), end_(data_) {
     end_ = data_ + ConstDataView(data_).ReadNum<int>() - SZ_EOO;
   }
@@ -57,8 +55,8 @@ class BSONObj {
   // syntactic sugar of range-based loop.
   //
 
-  typedef internal::BSONObjIterator<true> ConstIterator;
-  typedef internal::BSONObjIterator<false> Iterator;
+  typedef internal::ObjectIterator<true> ConstIterator;
+  typedef internal::ObjectIterator<false> Iterator;
 
   Iterator begin() {
     return Iterator(data_ + SZ_TotalSize, *this);
@@ -77,7 +75,7 @@ class BSONObj {
   }
 
   // Search the bson object for an element of the specified field name, if found
-  // it returns an iterator, otherwise it returns an iterator to BSONObj::end().
+  // it returns an iterator, otherwise it returns an iterator to Object::end().
   Iterator find(Slice field) {
     for (auto it = begin(); it != end(); it++) {
       if (strcmp(field.RawData(), it->RawFieldName()) == 0) {
@@ -128,7 +126,7 @@ class BSONObj {
     return static_cast<size_t>(ConstDataView(data_).ReadNum<int>());
   }
 
-  const SharedBuffer &SharedFromThis() const {
+  const SharedBuffer &ShareFromThis() const {
     return sbuf_;
   }
 
@@ -138,9 +136,9 @@ class BSONObj {
   SharedBuffer sbuf_;
 };
 
-struct BSONArray : public BSONObj {
-  BSONArray(const SharedBuffer &sharedBuf) : BSONObj(sharedBuf) {}
-  explicit BSONArray(const BSONObj &obj) : BSONArray(obj.SharedFromThis()) {}
+struct Array : public Object {
+  Array(const SharedBuffer &sharedBuf) : Object(sharedBuf) {}
+  explicit Array(const Object &obj) : Array(obj.ShareFromThis()) {}
 };
 
 }  // namespace bson

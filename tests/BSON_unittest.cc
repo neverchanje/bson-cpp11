@@ -25,7 +25,7 @@
 using namespace bson;
 
 TEST(Parser, Empty) {
-  BSONObjBuilder builder;
+  ObjectBuilder builder;
   Parser parser("{}");
 
   Status r = parser.Parse(builder);
@@ -34,7 +34,7 @@ TEST(Parser, Empty) {
   }
 
   ASSERT_TRUE(builder.HasDone());
-  BSONObj obj = builder.Obj();
+  Object obj = builder.Obj();
   ASSERT_EQ(obj.NumFields(), 0);
   ASSERT_TRUE(obj.begin() == obj.end());
 
@@ -42,7 +42,7 @@ TEST(Parser, Empty) {
 }
 
 TEST(Parser, Basic) {
-  BSONObjBuilder builder;
+  ObjectBuilder builder;
   Parser parser(
       "{"
       "'1' : 2147483647, "
@@ -62,13 +62,13 @@ TEST(Parser, Basic) {
     LOG(ERROR) << r.ToString() << std::endl;
   }
 
-  BSONObj obj = builder.Obj();
+  Object obj = builder.Obj();
   ASSERT_EQ(obj.NumFields(), 10);
   LOG(INFO) << "TEST Basic: " << obj.Dump() << std::endl;
 }
 
 TEST(Parser, Embedded) {
-  BSONObjBuilder builder;
+  ObjectBuilder builder;
   Parser parser(
       "["
       "{"
@@ -98,13 +98,13 @@ TEST(Parser, Embedded) {
     LOG(ERROR) << r.ToString() << std::endl;
   }
 
-  BSONObj obj = builder.Obj();
+  Object obj = builder.Obj();
   ASSERT_EQ(obj.NumFields(), 3);
   LOG(INFO) << "TEST Embedded: " << obj.Dump() << std::endl;
 }
 
 TEST(Parser, Special) {
-  BSONObjBuilder builder;
+  ObjectBuilder builder;
   Parser parser(
       "{"
       "'1' : Datetime(9223372036854775807), "
@@ -117,7 +117,7 @@ TEST(Parser, Special) {
     LOG(ERROR) << r.ToString() << std::endl;
   }
 
-  BSONObj obj = builder.Obj();
+  Object obj = builder.Obj();
   ASSERT_EQ(obj.NumFields(), 3);
   LOG(INFO) << "TEST Special: " << obj.Dump() << std::endl;
 }
@@ -128,7 +128,7 @@ TEST(Parser, TypeJson) {
   std::ifstream ifs("../../data/type.json");
   std::string json(iterator_t(ifs), (iterator_t()));
 
-  BSONObj obj = FromJSON(json);
+  Object obj = FromJSON(json);
 
   ASSERT_TRUE(obj.begin() != obj.end());
   LOG(INFO) << obj.Dump();

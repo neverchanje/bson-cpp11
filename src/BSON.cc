@@ -22,8 +22,8 @@
 
 namespace bson {
 
-BSONObj FromJSON(Slice json) {
-  BSONObjBuilder builder;
+Object FromJSON(Slice json) {
+  ObjectBuilder builder;
   Parser parser(json);
 
   Status s;

@@ -18,14 +18,12 @@
 #pragma once
 
 #include "Slice.h"
-#include "BSONObj.h"
+#include "Object.h"
 
 namespace bson {
 
-class BSONObj;
+extern Object FromJSON(Slice json);
 
-extern BSONObj FromJSON(Slice json);
-
-extern std::string ToJSON(const BSONObj &bson);
+extern std::string ToJSON(const Object &bson);
 
 }  // namespace bson

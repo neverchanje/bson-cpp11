@@ -26,10 +26,10 @@
 
 namespace bson {
 
-//  Element represents an "element" in a BSONObj.  So for the object
+//  Element represents an "element" in a Object.  So for the object
 //  { a : 3, b : "abc" }, 'a : 3' is the first element (key+value).
 //
-//  A Element object points into the BSONObj's data. Thus the BSONObj
+//  A Element object points into the Object's data. Thus the Object
 //  must stay in scope for the life of the Element.
 //
 //  internals:
@@ -60,7 +60,7 @@ class Element {
   // name : "Joe"
   // "name" is the fieldname
   const char *RawFieldName() const {
-    if (Type() == Type_t::EOO) {
+    if (Type() == Type_t::kEOO) {
       return "";
     }
     return elem_ + sizeof(char);
@@ -84,14 +84,14 @@ class Element {
     return static_cast<size_t>(fieldNameSize_);
   }
 
-  // Must assure that the type of this element is Type_t::String first.
+  // Must assure that the type of this element is Type_t::kString first.
   // @return String size including terminating null
   size_t ValueStrSize() const {
     return static_cast<size_t>(ConstDataView(RawValue()).ReadNum<int>());
   }
 
-  // Must assure that the type of this element is Type_t::Object or
-  // Type_t::Array first.
+  // Must assure that the type of this element is Type_t::kObject or
+  // Type_t::kArray first.
   // @return embedded object size including the size itself
   size_t ValueObjSize() const {
     return static_cast<size_t>(ConstDataView(RawValue()).ReadNum<int>());

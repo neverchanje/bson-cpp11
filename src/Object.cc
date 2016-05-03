@@ -1,4 +1,3 @@
-#include "BSONObjBuilder.h"
 /**
  * Copyright (C) 2016, Wu Tao All rights reserved.
  *
@@ -15,3 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <sstream>
+
+#include "Object.h"
+
+namespace bson {
+
+std::string Object::Dump() const {
+  std::ostringstream oss;
+  for (ConstIterator i = begin(); i != end(); i++) {
+    const Element &e = *i;
+    oss << "Field: " << e.RawFieldName() << ", Type: " << TypeToString(e.Type())
+        << "\n";
+  }
+  return oss.str();
+}
+
+}  // namespace bson

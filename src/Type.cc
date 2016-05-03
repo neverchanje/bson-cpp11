@@ -23,25 +23,25 @@ namespace bson {
 
 const char *TypeToString(Type_t t) {
   switch (t) {
-    case EOO:
+    case kEOO:
       return "EOO";
-    case NumberDouble:
+    case kNumberDouble:
       return "NumberDouble";
-    case String:
-      return "String";
-    case Object:
+    case kString:
+      return "kString";
+    case kObject:
       return "Object";
-    case Array:
+    case kArray:
       return "Array";
-    case Boolean:
+    case kBoolean:
       return "Boolean";
-    case Null:
+    case kNull:
       return "Null";
-    case NumberInt:
+    case kNumberInt:
       return "NumberInt";
-    case NumberLong:
+    case kNumberLong:
       return "NumberLong";
-    case Datetime:
+    case kDatetime:
       return "Datetime";
     default:
       BOOST_ASSERT_MSG(0, "Unknown type");

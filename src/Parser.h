@@ -21,7 +21,7 @@
 #include <sstream>
 
 #include "DisallowCopying.h"
-#include "BSONObjBuilder.h"
+#include "ObjectBuilder.h"
 #include "Status.h"
 
 namespace bson {
@@ -45,7 +45,7 @@ class Parser {
         cur_(buf_),
         buf_end_(json.RawData() + json.Len()) {}
 
-  Status Parse(BSONObjBuilder &builder) {
+  Status Parse(ObjectBuilder &builder) {
     // A bson object as well as bson array begins with a left brace but without
     // a specific field name.
     if (advance(LBRACE)) {
@@ -108,14 +108,14 @@ class Parser {
   //
   // NOTE: Left brace of this object has been skipped.
   //
-  Status parseObject(Slice field, BSONObjBuilder &builder, bool subObj = true) {
+  Status parseObject(Slice field, ObjectBuilder &builder, bool subObj = true) {
     if (cur_ == buf_end_)
       return parseError("Expecting an }");
 
-    std::unique_ptr<BSONObjBuilder> subBuilder;
-    BSONObjBuilder *objBuilder = &builder;
+    std::unique_ptr<ObjectBuilder> subBuilder;
+    ObjectBuilder *objBuilder = &builder;
     if (subObj) {
-      subBuilder.reset(new BSONObjBuilder());
+      subBuilder.reset(new ObjectBuilder());
       objBuilder = subBuilder.get();
     }
 
@@ -158,7 +158,7 @@ class Parser {
   // FIELD_RESERVE_SIZE of bytes must be reserved in "result" before this method
   // is called.
   //
-  Status parsePair(std::string *field, BSONObjBuilder &builder) {
+  Status parsePair(std::string *field, ObjectBuilder &builder) {
     Status ret = parseField(field);
     if (!ret)
       return ret;
@@ -320,7 +320,7 @@ class Parser {
   // | DATE
   // | REGEX
   //
-  Status parseValue(Slice field, BSONObjBuilder &builder) {
+  Status parseValue(Slice field, ObjectBuilder &builder) {
     Status ret;
 
     if (advance("Datetime")) {
@@ -384,17 +384,17 @@ class Parser {
   //   | VALUE , ELEMENTS
   //
   // NOTE: left bracket of this array has been skipped.
-  // @param subObj indicates whether a new BSONObjBuilder is required.
+  // @param subObj indicates whether a new ObjectBuilder is required.
   //
-  Status parseArray(Slice field, BSONObjBuilder &builder, bool subObj = true) {
+  Status parseArray(Slice field, ObjectBuilder &builder, bool subObj = true) {
     if (cur_ == buf_end_) {
       return parseError("Expecting an ]");
     }
 
-    std::unique_ptr<BSONObjBuilder> subBuilder;
-    BSONObjBuilder *objBuilder = &builder;
+    std::unique_ptr<ObjectBuilder> subBuilder;
+    ObjectBuilder *objBuilder = &builder;
     if (subObj) {
-      subBuilder.reset(new BSONObjBuilder());
+      subBuilder.reset(new ObjectBuilder());
       objBuilder = subBuilder.get();
     }
 
@@ -402,7 +402,7 @@ class Parser {
       // empty array
       objBuilder->DoneFast();
       if (subObj) {
-        builder.Append(field, BSONArray(subBuilder->Obj()));
+        builder.Append(field, Array(subBuilder->Obj()));
       }
       return Status::OK();
     }
@@ -418,7 +418,7 @@ class Parser {
 
     objBuilder->DoneFast();
     if (subObj) {
-      builder.Append(field, BSONArray(subBuilder->Obj()));
+      builder.Append(field, Array(subBuilder->Obj()));
     }
     return Status::OK();
   }
@@ -427,7 +427,7 @@ class Parser {
   // Number parsing is based on standard library functions, not
   // necessarily on the JSON numeric grammar.
   //
-  Status parseNumber(Slice field, BSONObjBuilder &builder) {
+  Status parseNumber(Slice field, ObjectBuilder &builder) {
     Status ret;
     char *pendll, *pendd;
     int err_num;
@@ -472,7 +472,7 @@ class Parser {
 
   // NUMBERINT :
   //   NumberInt( <number> )
-  Status parseNumberInt(Slice field, BSONObjBuilder &builder) {
+  Status parseNumberInt(Slice field, ObjectBuilder &builder) {
     if (!advance(LPAREN))
       return parseError("Expecting (");
 
@@ -502,7 +502,7 @@ class Parser {
 
   // NUMBERLONG :
   //   NumberLong( <number> )
-  Status parseNumberLong(Slice field, BSONObjBuilder &builder) {
+  Status parseNumberLong(Slice field, ObjectBuilder &builder) {
     if (!advance(LPAREN))
       return parseError("Expecting (");
 
@@ -534,7 +534,7 @@ class Parser {
   // DATETIME :
   //   Datetime( <64 bit unsigned integer for seconds since epoch> )
   //
-  Status parseDatetime(Slice field, BSONObjBuilder &builder) {
+  Status parseDatetime(Slice field, ObjectBuilder &builder) {
     if (!advance(LPAREN))
       return parseError("Expecting (");
 
