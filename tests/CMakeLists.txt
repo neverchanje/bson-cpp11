@@ -29,9 +29,7 @@ add_executable(BSON_unittest
         ../src/Status.cc
         ../src/BSONObj.cc
         ../src/Type.cc
-        ../src/Element.cc
-        ../src/Parser.h
-        ../src/internal/BSONObjIterator.h)
+        ../src/Element.cc)
 target_link_libraries(BSON_unittest gtest gtest_main ${SILLY_LIBRARY} ${GLOG_LIBRARY})
 
 add_executable(BSONElement_unittest
@@ -39,3 +37,18 @@ add_executable(BSONElement_unittest
         ../src/Element.cc
         ../src/Type.cc)
 target_link_libraries(BSONElement_unittest gtest gtest_main ${SILLY_LIBRARY} ${GLOG_LIBRARY})
+
+add_executable(BSON_perftest
+        BSON_perftest.cc
+        ../src/BSON.cc
+        ../src/BSONObjBuilder.cc
+        ../src/BufBuilder.cc
+        ../src/Status.cc
+        ../src/BSONObj.cc
+        ../src/Type.cc
+        ../src/Element.cc)
+target_link_libraries(BSON_perftest ${BENCHMARK_LIBRARY} ${GLOG_LIBRARY} ${SILLY_LIBRARY})
+
+#add_executable(SharedBuffer_unittest
+#        ../src/SharedBuffer.cc)
+#target_link_libraries(SharedBuffer_unittest gtest gtest_main)

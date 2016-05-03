@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <cstring>  // memcpy
 #include <boost/assert.hpp>
+#include <iostream>
 
 #include "BufBuilder.h"
 
@@ -28,9 +29,6 @@ void BufBuilder::kill() {
     std::free(buf_);
     buf_ = nullptr;
   }
-  cap_ = 0;
-  len_ = 0;
-  reservedBytes_ = 0;
 }
 
 void BufBuilder::ensureCapacity(size_t n) {
@@ -42,7 +40,7 @@ void BufBuilder::ensureCapacity(size_t n) {
     size_t newcap = (oldcap * 3) / 2 + 1;
     if (newcap < minsize)
       newcap = minsize;
-    buf_ = (char*)std::realloc(buf_, newcap);
+    buf_ = (char *)std::realloc(buf_, newcap);
     BOOST_ASSERT_MSG(buf_ != nullptr,
                      "out of memory BufBuilder::ensureCapacity");
     cap_ = newcap;

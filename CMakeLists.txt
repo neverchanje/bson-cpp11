@@ -8,6 +8,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmakes")
 find_package(Boost REQUIRED)
 find_package(Glog REQUIRED)
 find_library(SILLY_LIBRARY silly)
+find_library(BENCHMARK_LIBRARY NAMES benchmark)
+find_path(BENCHMARK_INCLUDE_DIR benchmark/benchmark.h)
 
 link_directories(${Boost_LIBRARIES_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})

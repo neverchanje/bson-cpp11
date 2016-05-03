@@ -18,16 +18,21 @@
 #pragma once
 
 #include <unordered_map>
+
 #include "Element.h"
 #include "Slice.h"
 #include "internal/BSONObjIterator.h"
 
 namespace bson {
 
-// A BSON object is an unordered set of name/value pairs.
+// A BSON object is an unordered set of name/value pairs. @see BSONObjBuilder.h
+// for the format of BSON object.
+// BSONObj represents a block of binary data constructed from BSONObjBuilder.
+// The lifetime of the internal binary data is managed by reference counting, if
+// no instance of BSONObj or BSONBuilder holds the data, it will be freed.
 //
-// BSON object format: @see BSONObjBuilder.h
-//
+
+typedef std::shared_ptr<const char> SharedBuffer;
 
 class BSONObj {
   static const size_t SZ_TotalSize = 4;
@@ -36,9 +41,10 @@ class BSONObj {
   template <bool IsConst> friend class internal::BSONObjIterator;
 
  public:
-  BSONObj(const char *bson_data)
-      : data_(bson_data),
-        end_(data_ + ConstDataView(data_).ReadNum<int>() - SZ_EOO) {}
+  BSONObj(const SharedBuffer &sharedBuf)
+      : sbuf_(sharedBuf), data_(sharedBuf.get()), end_(data_) {
+    end_ = data_ + ConstDataView(data_).ReadNum<int>() - SZ_EOO;
+  }
 
   // intentionally copyable
 
@@ -101,7 +107,7 @@ class BSONObj {
   }
 
   // @return the number of top level fields in the object
-  // NOTE: takes O(n) time to iterate to count the fields
+  // NOTE: takes O(n) time iteration to count the fields
   int NumFields() const {
     int ret = 0;
     for (auto it = begin(); it != end(); it++)
@@ -122,14 +128,19 @@ class BSONObj {
     return static_cast<size_t>(ConstDataView(data_).ReadNum<int>());
   }
 
+  const SharedBuffer &SharedFromThis() const {
+    return sbuf_;
+  }
+
  private:
   const char *data_;
   const char *end_;
+  SharedBuffer sbuf_;
 };
 
 struct BSONArray : public BSONObj {
-  BSONArray(const char *data) : BSONObj(data) {}
-  explicit BSONArray(const BSONObj obj) : BSONArray(obj.RawData()) {}
+  BSONArray(const SharedBuffer &sharedBuf) : BSONObj(sharedBuf) {}
+  explicit BSONArray(const BSONObj &obj) : BSONArray(obj.SharedFromThis()) {}
 };
 
 }  // namespace bson

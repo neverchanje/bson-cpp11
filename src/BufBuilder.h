@@ -1,3 +1,4 @@
+
 /**
  * Copyright (C) 2016, Wu Tao All rights reserved.
  *
@@ -98,6 +99,13 @@ class BufBuilder {
     reservedBytes_ = 0;
   }
 
+  // Release the ownership of the buffer.
+  const char* Release() {
+    char* r = buf_;
+    buf_ = nullptr;
+    return r;
+  }
+
  public:
   //
   // Observers
@@ -115,16 +123,12 @@ class BufBuilder {
     return len_;
   }
 
-  size_t Cap() const {
-    return cap_;
-  }
-
   //  size_t Reserved() const {
   //    return reservedBytes_;
   //  }
 
  private:
-  // Release the resources and reinitialize the variables.
+  // Release the resources.
   void kill();
 
   // Ensure that the capacity of buffer is large enough for the needed
@@ -139,4 +143,4 @@ class BufBuilder {
   size_t reservedBytes_;
 };
 
-}  // namespace bson4
+}  // namespace bson

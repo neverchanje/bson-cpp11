@@ -37,6 +37,8 @@ class Status {
   Status(const Status& rhs);
   Status& operator=(const Status& rhs);
 
+  Status(Status&& rhs) : info_(rhs.info_.release()) {}
+
   // Return an success state.
   //
   // The cost of creating an success state is much cheaper than an error state.

@@ -43,7 +43,7 @@ class BSONObjIterator : public IteratorFacade<BSONObjIterator<IsConst>, Element,
   BSONObjIterator(const BSONObjIterator &other)
       : pos_(other.pos_), obj_(other.obj_) {}
 
-  const BSONObjIterator &operator=(const BSONObjIterator &other) {
+  BSONObjIterator &operator=(const BSONObjIterator &other) {
     pos_ = other.pos_;
     obj_ = other.obj_;
     return *this;

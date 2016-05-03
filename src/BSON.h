@@ -18,6 +18,7 @@
 #pragma once
 
 #include "Slice.h"
+#include "BSONObj.h"
 
 namespace bson {
 

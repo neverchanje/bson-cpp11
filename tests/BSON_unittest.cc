@@ -17,8 +17,10 @@
 
 #include <gtest/gtest.h>
 #include <glog/logging.h>
+#include <fstream>
 
 #include "Parser.h"
+#include "BSON.h"
 
 using namespace bson;
 
@@ -118,4 +120,16 @@ TEST(Parser, Special) {
   BSONObj obj = builder.Obj();
   ASSERT_EQ(obj.NumFields(), 3);
   LOG(INFO) << "TEST Special: " << obj.Dump() << std::endl;
+}
+
+TEST(Parser, TypeJson) {
+  typedef std::istreambuf_iterator<char> iterator_t;
+
+  std::ifstream ifs("../../data/type.json");
+  std::string json(iterator_t(ifs), (iterator_t()));
+
+  BSONObj obj = FromJSON(json);
+
+  ASSERT_TRUE(obj.begin() != obj.end());
+  LOG(INFO) << obj.Dump();
 }

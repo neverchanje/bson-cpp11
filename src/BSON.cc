@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <glog/logging.h>
+
 #include "BSON.h"
 #include "Parser.h"
 
@@ -26,10 +28,10 @@ BSONObj FromJSON(Slice json) {
 
   Status s;
   if (!(s = parser.Parse(builder))) {
-    // error handling
+    LOG(FATAL) << s.ToString();
   }
 
-  return builder.Obj();
+  return builder.Done();
 }
 
 }  // namespace bson

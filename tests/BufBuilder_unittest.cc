@@ -55,3 +55,21 @@ TEST(Basic, ReserveAndEmpty) {
   builder.ClaimReservedBytes(1);
   ASSERT_EQ(builder.Len(), 0);
 }
+
+TEST(Basic, Ownership) {
+  std::shared_ptr<const char> sp;
+  {
+    BufBuilder builder;
+    builder.AppendNum(1000LL);
+    builder.AppendStr("yes");
+    builder.AppendBuf("000", 3);
+
+    sp.reset(builder.Release());
+  }
+
+  ASSERT_EQ(0, memcmp(sp.get(), little_int64_buf_t(1000LL).data(),
+                      sizeof(long long)));
+  ASSERT_EQ(0, strcmp(sp.get() + sizeof(long long), "yes"));
+  ASSERT_EQ(0, memcmp(sp.get() + sizeof(long long) + 4, "000", 3));
+  ASSERT_EQ(ConstDataView(sp.get()).ReadNum<long long>(), 1000LL);
+}

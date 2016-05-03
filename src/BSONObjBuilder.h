@@ -216,15 +216,23 @@ class BSONObjBuilder {
   }
 
   // @return BSONObj constructed by this BSONObjBuilder.
-  BSONObj Obj() const {
+  BSONObj Obj() {
     BOOST_ASSERT_MSG(doneCalled_, "Building of this object hasn't done yet.");
-    return BSONObj(buf_.Buf());
+    if (sbuf_.get() == nullptr) {
+      sbuf_.reset(buf_.Release());
+    }
+    assert(sbuf_.get() != nullptr);
+    return BSONObj(sbuf_);
   }
 
  public:
   // (DEBUG)
-  const BufBuilder &TEST_BufBuilder() const {
+  BufBuilder &TEST_BufBuilder() {
     return buf_;
+  }
+
+  SharedBuffer &TEST_SharedBuffer() {
+    return sbuf_;
   }
 
  private:
@@ -235,6 +243,7 @@ class BSONObjBuilder {
  private:
   BufBuilder buf_;
   bool doneCalled_;
+  SharedBuffer sbuf_;
 };
 
 }  // namespace bson
