@@ -10,6 +10,7 @@ find_package(Glog REQUIRED)
 find_library(SILLY_LIBRARY silly)
 find_library(BENCHMARK_LIBRARY NAMES benchmark)
 find_path(BENCHMARK_INCLUDE_DIR benchmark/benchmark.h)
+find_library(RAPIDJSON_LIBRARY rapidjson)
 
 link_directories(${Boost_LIBRARIES_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})

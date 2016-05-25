@@ -23,10 +23,14 @@
 #include <fstream>
 #include <benchmark/benchmark.h>
 #include <glog/logging.h>
+#include <silly/Slice.h>
+
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 #include "BSON.h"
-
-using namespace bson;
 
 std::string json_files[6] = {
     "../../data/canada.json",  "../../data/mock.json",
@@ -34,56 +38,81 @@ std::string json_files[6] = {
     "../../data/default.json", "../../data/anyOf.json",
 };
 
-uint64_t bytesCount = 0, totalTime = 0;
+uint64_t bytesCount[3];
+int64_t totalTime[3];
 
-static void BM_MyBSON(benchmark::State& state) {
+template <class F, int testCnt> void JSON_Benchmark(benchmark::State& state) {
   typedef std::istreambuf_iterator<char> iterator_t;
-
   std::ifstream ifs(json_files[state.range_x()]);
   std::string json(iterator_t(ifs), (iterator_t()));
-
   auto t1 = std::chrono::high_resolution_clock::now();
+  F func;
 
   while (state.KeepRunning()) {
-    Object obj = FromJSON(json);
-    assert(obj.begin() != obj.end());
+    func(json.data());
   }
-
   auto t2 = std::chrono::high_resolution_clock::now();
-
-  bytesCount += state.iterations() * json.length();
-  totalTime += t2.time_since_epoch().count() - t1.time_since_epoch().count();
+  bytesCount[testCnt] += state.iterations() * json.length() / 1000;
+  totalTime[testCnt] +=
+      t2.time_since_epoch().count() - t1.time_since_epoch().count();
 }
 
-uint64_t bytesCount2 = 0, totalTime2 = 0;
-
-static void BM_Strlen(benchmark::State& state) {
-  typedef std::istreambuf_iterator<char> iterator_t;
-
-  std::ifstream ifs(json_files[state.range_x()]);
-  std::string json(iterator_t(ifs), (iterator_t()));
-
-  auto t1 = std::chrono::high_resolution_clock::now();
-
-  while (state.KeepRunning()) {
-    strlen(json.data());
+struct StrDup {
+  void operator()(const silly::Slice& s) {
+    strdup(s.RawData());
   }
+};
 
-  auto t2 = std::chrono::high_resolution_clock::now();
+struct RapidJSON {
+  void operator()(const silly::Slice& s) {
+    using namespace rapidjson;
+    Document d;
+    d.Parse(s.RawData());
+    StringBuffer buffer;
+    Writer<StringBuffer> writer(buffer);
+    d.Accept(writer);
+  }
+};
 
-  bytesCount2 += state.iterations() * json.length();
-  totalTime2 += t2.time_since_epoch().count() - t1.time_since_epoch().count();
-}
+struct BSONCpp11 {
+  void operator()(const silly::Slice& s) {
+    bson::FromJSON(s);
+  }
+};
 
-BENCHMARK(BM_MyBSON)->Arg(0)->Arg(1)->Arg(2)->Arg(3)->Arg(4)->Arg(5);
-BENCHMARK(BM_Strlen)->Arg(0)->Arg(1)->Arg(2)->Arg(3)->Arg(4)->Arg(5);
+BENCHMARK_TEMPLATE2(JSON_Benchmark, StrDup, 0)
+    ->Arg(0)
+    ->Arg(1)
+    ->Arg(2)
+    ->Arg(3)
+    ->Arg(4)
+    ->Arg(5);
+
+BENCHMARK_TEMPLATE2(JSON_Benchmark, RapidJSON, 1)
+    ->Arg(0)
+    ->Arg(1)
+    ->Arg(2)
+    ->Arg(3)
+    ->Arg(4)
+    ->Arg(5);
+
+BENCHMARK_TEMPLATE2(JSON_Benchmark, BSONCpp11, 2)
+    ->Arg(0)
+    ->Arg(1)
+    ->Arg(2)
+    ->Arg(3)
+    ->Arg(4)
+    ->Arg(5);
 
 int main(int argc, const char** argv) {
   ::benchmark::Initialize(&argc, argv);
   ::benchmark::RunSpecifiedBenchmarks();
-  fprintf(stderr, "The parsing rate is at %lf kb/s\n",
-          (double)(bytesCount / 1000) / (totalTime / 1000000000));
+  fprintf(stderr, "The strdup rate is at %lf kb/s\n",
+          (double)(bytesCount[0]) / (totalTime[0] / 1000000000));
 
-  fprintf(stderr, "The strlen rate is at %lf kb/s\n",
-          (double)(bytesCount2 / 1000) / (totalTime2 / 1000000000));
+  fprintf(stderr, "The rapidjson rate is at %lf kb/s\n",
+          (double)(bytesCount[1]) / (totalTime[1] / 1000000000));
+
+  fprintf(stderr, "The bson-cpp rate is at %lf kb/s\n",
+          (double)(bytesCount[2]) / (totalTime[2] / 1000000000));
 }
